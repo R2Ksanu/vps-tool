@@ -1,11 +1,15 @@
 #!/bin/bash
 
-# Name of your setup
-SETUP_NAME="vps-tool"
-
-# Log everything
+# Logging
 exec > >(tee -i setup_log.txt)
 exec 2>&1
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
 
 # Spinner
 spinner() {
@@ -24,45 +28,38 @@ spinner() {
 
 # Root check
 if [ "$EUID" -ne 0 ]; then
-    echo -e "\n[!] Please run this script as root"
+    echo -e "${RED}[!] Please run this script as root${NC}"
     exit 1
 fi
 
-# Auto-install whiptail if missing
-if ! command -v whiptail >/dev/null 2>&1; then
-    echo "[+] Installing whiptail..."
-    apt update -y && apt install whiptail -y
-fi
-
-# Intro
-whiptail --title "$SETUP_NAME" --msgbox "👋 Welcome to the $SETUP_NAME installer by r2k.org" 10 50
+# Title
+echo -e "${CYAN}💻 Welcome to vps-tool setup by r2k.org${NC}"
 
 while true; do
-    CHOICE=$(whiptail --title "$SETUP_NAME - Main Menu" --menu "Choose what to install or configure:" 20 60 12 \
-    "1" "Base setup (sudo, tmate, apt update/upgrade)" \
-    "2" "Install Fastfetch (with deps)" \
-    "3" "Install Node.js v22 (via NVM)" \
-    "4" "Install SSHX (remote access tool)" \
-    "5" "Install Docker" \
-    "6" "Install Nginx" \
-    "7" "Setup UFW Firewall + Fail2Ban" \
-    "8" "Install PM2 (Node.js process manager)" \
-    "9" "Enable Fastfetch on login" \
-    "10" "Clean up system" \
-    "11" "Show system info" \
-    "0" "Exit" 3>&1 1>&2 2>&3)
+    echo -e "\n${YELLOW}Choose an option to install or configure:${NC}"
+    echo -e "${CYAN}1)${NC} Base setup (sudo, tmate, apt update/upgrade)"
+    echo -e "${CYAN}2)${NC} Install Fastfetch"
+    echo -e "${CYAN}3)${NC} Install Node.js v22 (via NVM)"
+    echo -e "${CYAN}4)${NC} Install SSHX"
+    echo -e "${CYAN}5)${NC} Install Docker"
+    echo -e "${CYAN}6)${NC} Install Nginx"
+    echo -e "${CYAN}7)${NC} Setup Firewall + Fail2Ban"
+    echo -e "${CYAN}8)${NC} Install PM2"
+    echo -e "${CYAN}9)${NC} Enable Fastfetch on login"
+    echo -e "${CYAN}10)${NC} Clean up system"
+    echo -e "${CYAN}11)${NC} Show system info"
+    echo -e "${CYAN}0)${NC} Exit"
+    echo -ne "${GREEN}Enter your choice: ${NC}"
+    read choice
 
-    if [ $? -ne 0 ]; then
-        break
-    fi
-
-    case "$CHOICE" in
+    case $choice in
     1)
-        whiptail --infobox "Installing base packages..." 8 40
+        echo -e "${CYAN}Setting up base packages...${NC}"
         (apt install sudo -y && apt update -y && apt upgrade -y && apt install tmate -y) & spinner
+        echo -e "${GREEN}✔ Base setup complete!${NC}"
         ;;
     2)
-        whiptail --infobox "Installing Fastfetch..." 8 40
+        echo -e "${CYAN}Installing Fastfetch...${NC}"
         (
             apt install -y git cmake build-essential libpci-dev libdrm-dev libxcb1-dev libxcb-randr0-dev \
             libxcb-xinerama0-dev libxcb-util-dev libxcb-ewmh-dev libxcb-icccm4-dev libxcb-image0-dev \
@@ -72,12 +69,13 @@ while true; do
             mkdir -p build && cd build
             cmake ..
             make -j$(nproc)
-            make install
+            sudo make install
             cd ~
         ) & spinner
+        echo -e "${GREEN}✔ Fastfetch installed!${NC}"
         ;;
     3)
-        whiptail --infobox "Installing Node.js v22..." 8 40
+        echo -e "${CYAN}Installing Node.js v22...${NC}"
         (
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
             export NVM_DIR="$HOME/.nvm"
@@ -85,25 +83,29 @@ while true; do
             nvm install 22
             nvm use 22
         ) & spinner
+        echo -e "${GREEN}✔ Node.js v22 installed!${NC}"
         ;;
     4)
-        whiptail --infobox "Installing SSHX..." 8 40
+        echo -e "${CYAN}Installing SSHX...${NC}"
         (curl -sSf https://sshx.io/get | sh) & spinner
+        echo -e "${GREEN}✔ SSHX installed!${NC}"
         ;;
     5)
-        whiptail --infobox "Installing Docker..." 8 40
+        echo -e "${CYAN}Installing Docker...${NC}"
         (
             curl -fsSL https://get.docker.com -o get-docker.sh
             sh get-docker.sh
             usermod -aG docker $USER
         ) & spinner
+        echo -e "${GREEN}✔ Docker installed!${NC}"
         ;;
     6)
-        whiptail --infobox "Installing Nginx..." 8 40
+        echo -e "${CYAN}Installing Nginx...${NC}"
         (apt install nginx -y && systemctl enable nginx && systemctl start nginx) & spinner
+        echo -e "${GREEN}✔ Nginx installed!${NC}"
         ;;
     7)
-        whiptail --infobox "Setting up UFW + Fail2Ban..." 8 40
+        echo -e "${CYAN}Setting up UFW + Fail2Ban...${NC}"
         (
             apt install ufw fail2ban -y
             ufw allow OpenSSH
@@ -113,27 +115,32 @@ while true; do
             systemctl enable fail2ban
             systemctl start fail2ban
         ) & spinner
+        echo -e "${GREEN}✔ Firewall and Fail2Ban setup complete!${NC}"
         ;;
     8)
-        whiptail --infobox "Installing PM2..." 8 40
+        echo -e "${CYAN}Installing PM2...${NC}"
         (npm install -g pm2 && pm2 startup) & spinner
+        echo -e "${GREEN}✔ PM2 installed!${NC}"
         ;;
     9)
         echo "fastfetch" >> ~/.bashrc
-        whiptail --msgbox "Fastfetch will now run on every login." 8 40
+        echo -e "${GREEN}✔ Fastfetch will run on every login.${NC}"
         ;;
     10)
-        whiptail --infobox "Cleaning up..." 8 40
+        echo -e "${CYAN}Cleaning up system...${NC}"
         (apt autoremove -y && apt clean) & spinner
+        echo -e "${GREEN}✔ System cleanup complete!${NC}"
         ;;
     11)
-        clear
-        fastfetch || echo "Fastfetch not installed"
-        read -p "Press Enter to return to menu..."
+        echo -e "${CYAN}System info:${NC}"
+        fastfetch || echo -e "${RED}Fastfetch is not installed.${NC}"
         ;;
     0)
-        whiptail --title "$SETUP_NAME" --msgbox "👋 Goodbye! Setup log saved as setup_log.txt" 8 50
+        echo -e "${GREEN}👋 Exit complete. Setup log saved to setup_log.txt${NC}"
         break
+        ;;
+    *)
+        echo -e "${RED}❌ Invalid choice. Try again.${NC}"
         ;;
     esac
 done
