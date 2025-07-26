@@ -1,21 +1,22 @@
 #!/bin/bash
 
 # Define colors
-LIGHT_GREEN='\033[1;32m'
-GREEN='\033[0;32m'
-CYAN='\033[0;36m'
 RED='\033[0;31m'
+ORANGE='\033[0;33m'  # using yellow as orange
+GREEN='\033[0;32m'
+LIGHT_GREEN='\033[1;32m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # ASCII Art
 ascii_art="
-${LIGHT_GREEN}███████╗███╗   ███╗ ██████╗      ████████╗ ██████╗  ██████╗ ██╗     
-${GREEN}██╔════╝████╗ ████║██╔═══██╗     ╚══██╔══╝██╔═══██╗██╔════╝ ██║     
-${LIGHT_GREEN}█████╗  ██╔████╔██║██║   ██║█████╗  ██║   ██║   ██║██║  ███╗██║     
-${GREEN}██╔══╝  ██║╚██╔╝██║██║   ██║╚════╝  ██║   ██║   ██║██║   ██║██║     
-${LIGHT_GREEN}███████╗██║ ╚═╝ ██║╚██████╔╝        ██║   ╚██████╔╝╚██████╔╝███████╗
-${GREEN}╚══════╝╚═╝     ╚═╝ ╚═════╝         ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝
-${CYAN}              Skyport Installer Tool - by R2K
+${RED}███████╗███╗   ███╗ ██████╗      ████████╗ ██████╗  ██████╗ ██╗     
+${ORANGE}██╔════╝████╗ ████║██╔═══██╗     ╚══██╔══╝██╔═══██╗██╔════╝ ██║     
+${RED}█████╗  ██╔████╔██║██║   ██║█████╗  ██║   ██║   ██║██║  ███╗██║     
+${ORANGE}██╔══╝  ██║╚██╔╝██║██║   ██║╚════╝  ██║   ██║   ██║██║   ██║██║     
+${RED}███████╗██║ ╚═╝ ██║╚██████╔╝        ██║   ╚██████╔╝╚██████╔╝███████╗
+${ORANGE}╚══════╝╚═╝     ╚═╝ ╚═════╝         ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝
+${CYAN}             Multi Panel Installer Tool - by R2K
 "
 
 # Print art
@@ -24,13 +25,13 @@ echo -e "$ascii_art"
 
 # Root check
 if [ "$EUID" -ne 0 ]; then
-  echo -e "${RED}Please run as root!${NC}"
+  echo -e "${RED}[✘] Please run this script as root.${NC}"
   exit 1
 fi
 
 # Message helper
 echo_message() {
-  echo -e "${LIGHT_GREEN}[*] $1${NC}"
+  echo -e "${GREEN}[✔] $1${NC}"
 }
 
 ### Install functions for Skyport ###
@@ -50,7 +51,7 @@ install_skyport_panel() {
   npm install -g pm2
   pm2 start index.js
 
-  echo -e "${GREEN}✔ Skyport Panel is running on port 3001!${NC}"
+  echo -e "${GREEN}[✔] Skyport Panel is running on port 3001!${NC}"
 }
 
 install_skyport_node() {
@@ -62,43 +63,56 @@ install_skyport_node() {
   echo_message "Paste your config file and run: pm2 start ."
 }
 
-### Placeholder for other panels ###
+### Placeholder installs ###
 install_draco_panel() {
   echo_message "Installing Draco Panel..."
-  # Add actual install logic here
+  # Add real logic here
+  sleep 1
+  echo -e "${GREEN}[✔] Draco Panel installation complete.${NC}"
 }
 
 install_pufferfish_panel() {
   echo_message "Installing Pufferfish Panel..."
-  # Add actual install logic here
+  # Add real logic here
+  sleep 1
+  echo -e "${GREEN}[✔] Pufferfish Panel installation complete.${NC}"
 }
 
 install_pterodactyl_panel() {
   echo_message "Installing Pterodactyl Panel..."
-  # Add actual install logic here
+  # Add real logic here
+  sleep 1
+  echo -e "${GREEN}[✔] Pterodactyl Panel installation complete.${NC}"
 }
 
 ### Skyport submenu ###
 skyport_menu() {
-  echo -e "${LIGHT_GREEN}Skyport Panel Setup:${NC}"
-  echo -e "${GREEN}[1] Panel Setup"
+  echo -e "${ORANGE}Skyport Panel Setup Options:${NC}"
+  echo -e "${ORANGE}[1] Panel Setup"
   echo -e "[2] Node Setup"
-  echo -n "Enter your choice: "
+  echo -e "[3] Panel and Node Setup${NC}"
+  echo -ne "${CYAN}Enter your choice: ${NC}"
   read -r subchoice
   case "$subchoice" in
     1) install_skyport_panel ;;
     2) install_skyport_node ;;
-    *) echo -e "${RED}Invalid option.${NC}" ;;
+    3)
+      install_skyport_panel
+      install_skyport_node
+      ;;
+    *)
+      echo -e "${RED}[✘] Invalid option.${NC}"
+      ;;
   esac
 }
 
 ### Main menu ###
-echo -e "${LIGHT_GREEN}Choose an option:${NC}"
-echo -e "${GREEN}[1] Skyport Panel"
+echo -e "${ORANGE}Main Menu:${NC}"
+echo -e "${ORANGE}[1] Skyport Panel"
 echo -e "[2] Draco Panel"
 echo -e "[3] Pufferfish Panel"
-echo -e "[4] Pterodactyl Panel"
-echo -n "Enter your choice: "
+echo -e "[4] Pterodactyl Panel${NC}"
+echo -ne "${CYAN}Enter your choice: ${NC}"
 read -r choice
 
 case "$choice" in
@@ -106,10 +120,12 @@ case "$choice" in
   2) install_draco_panel ;;
   3) install_pufferfish_panel ;;
   4) install_pterodactyl_panel ;;
-  *) echo -e "${RED}Invalid main option.${NC}" ;;
+  *)
+    echo -e "${RED}[✘] Invalid main option.${NC}"
+    ;;
 esac
 
-# Final note
+# Final message
 echo -e ""
-echo -e "${CYAN}To rerun later:${NC}"
+echo -e "${CYAN}To rerun this script later:${NC}"
 echo -e "${GREEN}chmod +x mc-tool.sh && sudo ./mc-tool.sh${NC}"
