@@ -34,7 +34,7 @@ echo_message() {
 }
 
 # Skyport Panel setup
-install_panel() {
+install_panel_only() {
   echo_message "Installing Dependencies"
   apt update
   apt install -y curl software-properties-common git
@@ -73,16 +73,38 @@ install_node() {
   echo -e "${GREEN}pm2 start .${NC}"
 }
 
-# Menu
+# Panel with Node option (nested menu)
+skyport_panel_menu() {
+  echo -e "${LIGHT_GREEN}Skyport Panel Options:${NC}"
+  echo -e "${GREEN}[1] Panel Setup"
+  echo -e "[2] Node Setup"
+  echo -n "Enter your choice: "
+  read -r subchoice
+
+  case "$subchoice" in
+    1)
+      install_panel_only
+      ;;
+    2)
+      install_node
+      ;;
+    *)
+      echo -e "${RED}Invalid sub-option! Exiting.${NC}"
+      exit 1
+      ;;
+  esac
+}
+
+# Main Menu
 echo -e "${LIGHT_GREEN}Choose an option below:${NC}"
 echo -e "${GREEN}[1] Skyport Panel"
-echo -e "[2] Skyport Node"
+echo -e "[2] Skyport Node (only)"
 echo -n "Enter your choice: "
 read -r choice
 
 case "$choice" in
   1)
-    install_panel
+    skyport_panel_menu
     ;;
   2)
     install_node
