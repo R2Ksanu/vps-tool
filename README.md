@@ -18,6 +18,5 @@ It includes essential utilities like `tmate`, `fastfetch`, `Node.js (via NVM)`, 
 ## 🛠️ Installation
 
 ```bash
-git clone https://github.com/R2Ksanu/vps-tool.git
-cd vps-tool
-bash r2k-vps.sh
+
+

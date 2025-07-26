@@ -5,8 +5,9 @@ exec > >(tee -i setup_log.txt)
 exec 2>&1
 
 # Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
+RED='\033[1;31m'
+ORANGE='\033[1;33m'
+GREEN='\033[1;32m'
 YELLOW='\033[0;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
@@ -32,8 +33,15 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Title
-echo -e "${CYAN}💻 Welcome to vps-tool setup by r2k.org${NC}"
+# Gradient ASCII art banner
+echo -e "${RED}"
+echo "██████╗ ██████╗ ██╗  ██╗     ██╗   ██╗██████╗ ███████╗"
+echo -e "${ORANGE}██╔══██╗██╔══██╗██║ ██╔╝     ██║   ██║██╔══██╗██╔════╝"
+echo -e "${RED}██████╔╝██████╔╝█████╔╝█████╗██║   ██║██████╔╝█████╗"
+echo -e "${ORANGE}██╔═══╝ ██╔══██╗██╔═██╗╚════╝██║   ██║██╔═══╝ ██╔══╝"
+echo -e "${RED}██║     ██║  ██║██║  ██╗     ╚██████╔╝██║     ███████╗"
+echo -e "${ORANGE}╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝      ╚═════╝ ╚═╝     ╚══════╝"
+echo -e "${CYAN}💻 VPS Tool Setup by r2k.org${NC}"
 
 while true; do
     echo -e "\n${YELLOW}Choose an option to install or configure:${NC}"
@@ -55,57 +63,56 @@ while true; do
     case $choice in
     1)
         echo -e "${CYAN}Setting up base packages...${NC}"
-        (apt install sudo -y && apt update -y && apt upgrade -y && apt install tmate -y) & spinner
+        (apt install -qq sudo tmate -y && apt update -qq -y && apt upgrade -qq -y) & spinner
         echo -e "${GREEN}✔ Base setup complete!${NC}"
         ;;
     2)
         echo -e "${CYAN}Installing Fastfetch...${NC}"
         (
-             add-apt-repository -y ppa:zhangsongcui3371/fastfetch
-            apt update
-            apt install -y fastfetch
-            cd ~
+            add-apt-repository -y ppa:zhangsongcui3371/fastfetch > /dev/null 2>&1
+            apt update -qq > /dev/null
+            apt install -y fastfetch > /dev/null
         ) & spinner
         echo -e "${GREEN}✔ Fastfetch installed!${NC}"
         ;;
     3)
         echo -e "${CYAN}Installing Node.js v22...${NC}"
         (
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+            curl -s https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash > /dev/null
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install 22
-            nvm use 22
+            nvm install 22 > /dev/null
+            nvm use 22 > /dev/null
         ) & spinner
         echo -e "${GREEN}✔ Node.js v22 installed!${NC}"
         ;;
     4)
         echo -e "${CYAN}Installing SSHX...${NC}"
-        (curl -sSf https://sshx.io/get | sh) & spinner
+        (curl -sSf https://sshx.io/get | sh > /dev/null) & spinner
         echo -e "${GREEN}✔ SSHX installed!${NC}"
         ;;
     5)
         echo -e "${CYAN}Installing Docker...${NC}"
         (
             curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
+            sh get-docker.sh > /dev/null
             usermod -aG docker $USER
         ) & spinner
         echo -e "${GREEN}✔ Docker installed!${NC}"
         ;;
     6)
         echo -e "${CYAN}Installing Nginx...${NC}"
-        (apt install nginx -y && systemctl enable nginx && systemctl start nginx) & spinner
+        (apt install nginx -y > /dev/null && systemctl enable nginx && systemctl start nginx) & spinner
         echo -e "${GREEN}✔ Nginx installed!${NC}"
         ;;
     7)
         echo -e "${CYAN}Setting up UFW + Fail2Ban...${NC}"
         (
-            apt install ufw fail2ban -y
-            ufw allow OpenSSH
-            ufw allow 80/tcp
-            ufw allow 443/tcp
-            ufw --force enable
+            apt install ufw fail2ban -y > /dev/null
+            ufw allow OpenSSH > /dev/null
+            ufw allow 80/tcp > /dev/null
+            ufw allow 443/tcp > /dev/null
+            ufw --force enable > /dev/null
             systemctl enable fail2ban
             systemctl start fail2ban
         ) & spinner
@@ -113,7 +120,7 @@ while true; do
         ;;
     8)
         echo -e "${CYAN}Installing PM2...${NC}"
-        (npm install -g pm2 && pm2 startup) & spinner
+        (npm install -g pm2 > /dev/null && pm2 startup > /dev/null) & spinner
         echo -e "${GREEN}✔ PM2 installed!${NC}"
         ;;
     9)
@@ -122,7 +129,7 @@ while true; do
         ;;
     10)
         echo -e "${CYAN}Cleaning up system...${NC}"
-        (apt autoremove -y && apt clean) & spinner
+        (apt autoremove -y > /dev/null && apt clean > /dev/null) & spinner
         echo -e "${GREEN}✔ System cleanup complete!${NC}"
         ;;
     11)
