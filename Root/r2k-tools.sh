@@ -50,7 +50,8 @@ main() {
             bash vps-tool/VPS-tool/r2k-vps.sh
             ;;
         2)
-            echo -e "\e[35m[!] Minecraft Tool is under development.\e[0m"
+            echo -e "\e[32m[+] Launching Minecraft Tool...\e[0m"
+            bash <(curl -s https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/Minecraft-tool/mc-tool.sh)
             ;;
         0)
             echo -e "\e[31mExiting... Goodbye!\e[0m"
@@ -66,6 +67,5 @@ main() {
 
 main
 
-# Make script executable and run it (if launched raw)
-chmod +x r2k-tools.sh
-./r2k-tools.sh
+# Optional: Make the script executable and rerun itself only if executed directly
+[[ $0 != bash ]] && chmod +x r2k-tools.sh && ./r2k-tools.sh
