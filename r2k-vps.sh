@@ -61,15 +61,9 @@ while true; do
     2)
         echo -e "${CYAN}Installing Fastfetch...${NC}"
         (
-            apt install -y git cmake build-essential libpci-dev libdrm-dev libxcb1-dev libxcb-randr0-dev \
-            libxcb-xinerama0-dev libxcb-util-dev libxcb-ewmh-dev libxcb-icccm4-dev libxcb-image0-dev \
-            libxcb-res0-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev zlib1g-dev
-            git clone https://github.com/fastfetch-cli/fastfetch.git --depth=1
-            cd fastfetch
-            mkdir -p build && cd build
-            cmake ..
-            make -j$(nproc)
-            sudo make install
+             add-apt-repository -y ppa:zhangsongcui3371/fastfetch
+            apt update
+            apt install -y fastfetch
             cd ~
         ) & spinner
         echo -e "${GREEN}✔ Fastfetch installed!${NC}"
