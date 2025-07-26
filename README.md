@@ -19,5 +19,5 @@ It includes essential utilities like `tmate`, `fastfetch`, `Node.js (via NVM)`, 
 
 ```bash
 
-bash <(curl -s https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/VPS-tool/r2k-vps.sh)
+bash <(curl -s https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/Root/r2k-tools.sh) 
 
