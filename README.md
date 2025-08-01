@@ -1,6 +1,13 @@
 # 🚀 R2K VPS Tool
 
-Welcome to the **R2K VPS Tool**, a robust, all-in-one solution for setting up and managing your Virtual Private Server (VPS) with ease. Designed for **speed**, **simplicity**, and **security**, this tool automates the installation of essential utilities like `tmate`, `fastfetch`, `Node.js`, `Docker`, `Nginx`, and more. With a sleek terminal interface featuring gradient ASCII art and loading spinners, it also supports Minecraft server panel installations like **Skyport**, **Draco**, and **Pterodactyl**. All actions are logged to `setup_log.txt` for transparency and troubleshooting.
+Welcome to the **R2K VPS Tool**, a robust, all-in-one solution for setting up and managing your Virtual Private Server (VPS) with ease
+
+Designed for **speed**, **simplicity**, and **security**, this tool automates the installation of essential utilities like `tmate`, `fastfetch`, `Node.js`, `Docker`, `Nginx`, and more.
+
+ With a sleek terminal interface featuring gradient ASCII art and loading spinners, it also supports Minecraft server panel installations like **Skyport**, **Draco**, 
+ and **Pterodactyl**.
+
+All actions are logged to `setup_log.txt` for transparency and troubleshooting.
 ---
 Powered by R2K
 
