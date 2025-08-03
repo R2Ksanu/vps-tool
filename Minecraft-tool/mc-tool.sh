@@ -41,6 +41,33 @@ echo_message() {
   echo -e "${ORANGE}[*] $1${NC}"
 }
 
+# Draco Panel Install (UPDATED)
+install_draco_panel() {
+  port_check 3000
+  echo_message "Installing Draco Panel..."
+  apt update
+  apt install -y curl software-properties-common git
+  curl -sL https://deb.nodesource.com/setup_20.x | sudo bash -
+  apt-get install -y nodejs
+  git clone https://github.com/dragonlabsdev/panel-v1.0.0.git
+  cd panel-v1.0.0 || exit 1
+  npm install
+  npm run seed
+  npm run createUser
+  node .
+  echo -e "${GREEN}✔ Draco Panel running on port 3000${NC}"
+}
+
+# Draco Node Install (UPDATED)
+install_draco_node() {
+  echo_message "Installing Draco Node..."
+  git clone https://github.com/draco-labes/draco-daemon
+  cd draco-daemon || exit 1
+  npm install
+  echo_message "Paste your configuration here."
+  echo -e "${GREEN}Run with: node .${NC}"
+}
+
 # Skyport Panel Install
 install_skyport_panel() {
   port_check 3001
@@ -69,33 +96,6 @@ install_skyport_node() {
   npm install
   echo_message "Paste your configuration here."
   echo -e "${GREEN}Run with: pm2 start .${NC}"
-}
-
-# Draco Panel Install
-install_draco_panel() {
-  port_check 3001
-  echo_message "Installing Draco Panel..."
-  apt update
-  apt install -y curl software-properties-common git
-  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-  apt install -y nodejs
-  git clone https://github.com/draco-labes/oversee-fixed.git
-  cd oversee-fixed || exit 1
-  npm install
-  npm run seed
-  npm run createUser
-  node .
-  echo -e "${GREEN}✔ Draco Panel running on port 3000${NC}"
-}
-
-# Draco Node Install
-install_draco_node() {
-  echo_message "Installing Draco Node..."
-  git clone https://github.com/hydren-dev/HydraDAEMON.git
-  cd HydraDAEMON || exit 1
-  npm install
-  echo_message "Paste your configuration here."
-  echo -e "${GREEN}Run with: node .${NC}"
 }
 
 # Pterodactyl Base Install
