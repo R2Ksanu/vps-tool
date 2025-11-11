@@ -50,7 +50,7 @@ run_script() {
 # Function for Google IDX setup (one-liner curl)
 run_google_idx() {
     echo -e "${YELLOW}Running Google IDX setup from GitHub...${NC}"
-    curl -fsSL "https://raw.githubusercontent.com/R2Ksanu/vps-setup/main/Google-IDX/17-Google%20IDX-setup.sh" | bash &
+    curl -fsSL "https://raw.githubusercontent.com/R2Ksanu/vps-setup/main/Google-IDX/17-Google-IDX-setup.sh" | bash &
     spinner
     echo -e "${GREEN}Completed: Google IDX setup${NC}\n"
 }
