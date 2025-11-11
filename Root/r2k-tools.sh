@@ -46,8 +46,7 @@ main() {
     case "$choice" in
         1)
             echo -e "\e[34m[+] Cloning and running VPS Tool...\e[0m"
-            git clone https://github.com/R2Ksanu/vps-tool.git &> /dev/null
-            bash vps-tool/VPS-tool/r2k-vps.sh
+            bash <(curl -s https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/setup.sh)
             ;;
         2)
             echo -e "\e[32m[+] Launching Minecraft Tool...\e[0m"
