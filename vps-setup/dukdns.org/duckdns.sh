@@ -1,7 +1,7 @@
 #!/bin/bash
 # ========================================
 # 🦆 DuckDNS Auto-Updater (Pro Edition)
-# Author: You 🚀
+# Author: R2Ksanu
 # ========================================
 
 # --- Colors ---
