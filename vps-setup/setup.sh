@@ -34,23 +34,122 @@ spinner() {
     printf "    \b\b\b\b"
 }
 
-# Function to run a local script
-run_script() {
-    local script_name="$1"
-    if [[ -f "$script_name" ]]; then
-        echo -e "${GREEN}Running $script_name...${NC}"
-        bash "$script_name" &
-        spinner
-        echo -e "${GREEN}Completed: $script_name${NC}\n"
-    else
-        echo -e "${RED}Error: $script_name not found!${NC}\n"
-    fi
+# Function for Base Setup (one-liner curl)
+run_base_setup() {
+    local filename="1-base-setup.sh"
+    local base_url="https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup"
+    echo -e "${YELLOW}Running Base Setup from GitHub...${NC}"
+    curl -sL "${base_url}/${filename}" | bash &
+    spinner
+    echo -e "${GREEN}Completed: Base Setup${NC}\n"
+}
+
+# Function for Fastfetch (one-liner curl)
+run_fastfetch() {
+    local filename="2-fastfetch.sh"
+    local base_url="https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup"
+    echo -e "${YELLOW}Running Fastfetch from GitHub...${NC}"
+    curl -sL "${base_url}/${filename}" | bash &
+    spinner
+    echo -e "${GREEN}Completed: Fastfetch${NC}\n"
+}
+
+# Function for NodeJS (one-liner curl)
+run_nodejs() {
+    local filename="3-nodejs.sh"
+    local base_url="https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup"
+    echo -e "${YELLOW}Running NodeJS from GitHub...${NC}"
+    curl -sL "${base_url}/${filename}" | bash &
+    spinner
+    echo -e "${GREEN}Completed: NodeJS${NC}\n"
+}
+
+# Function for SSHX (one-liner curl)
+run_sshx() {
+    local filename="4-sshx.sh"
+    local base_url="https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup"
+    echo -e "${YELLOW}Running SSHX from GitHub...${NC}"
+    curl -sL "${base_url}/${filename}" | bash &
+    spinner
+    echo -e "${GREEN}Completed: SSHX${NC}\n"
+}
+
+# Function for Docker (one-liner curl)
+run_docker() {
+    local filename="5-docker.sh"
+    local base_url="https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup"
+    echo -e "${YELLOW}Running Docker from GitHub...${NC}"
+    curl -sL "${base_url}/${filename}" | bash &
+    spinner
+    echo -e "${GREEN}Completed: Docker${NC}\n"
+}
+
+# Function for Firewall + Fail2Ban (one-liner curl)
+run_firewall_fail2ban() {
+    local filename="7-firewall-fail2ban.sh"
+    local base_url="https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup"
+    echo -e "${YELLOW}Running Firewall + Fail2Ban from GitHub...${NC}"
+    curl -sL "${base_url}/${filename}" | bash &
+    spinner
+    echo -e "${GREEN}Completed: Firewall + Fail2Ban${NC}\n"
+}
+
+# Function for PM2 (one-liner curl)
+run_pm2() {
+    local filename="8-pm2.sh"
+    local base_url="https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup"
+    echo -e "${YELLOW}Running PM2 from GitHub...${NC}"
+    curl -sL "${base_url}/${filename}" | bash &
+    spinner
+    echo -e "${GREEN}Completed: PM2${NC}\n"
+}
+
+# Function for Fastfetch Login (one-liner curl)
+run_fastfetch_login() {
+    local filename="9-fastfetch-login.sh"
+    local base_url="https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup"
+    echo -e "${YELLOW}Running Fastfetch Login from GitHub...${NC}"
+    curl -sL "${base_url}/${filename}" | bash &
+    spinner
+    echo -e "${GREEN}Completed: Fastfetch Login${NC}\n"
+}
+
+# Function for Cleanup (one-liner curl)
+run_cleanup() {
+    local filename="10-cleanup.sh"
+    local base_url="https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup"
+    echo -e "${YELLOW}Running Cleanup from GitHub...${NC}"
+    curl -sL "${base_url}/${filename}" | bash &
+    spinner
+    echo -e "${GREEN}Completed: Cleanup${NC}\n"
+}
+
+# Function for Sysinfo (one-liner curl)
+run_sysinfo() {
+    local filename="11-sysinfo.sh"
+    local base_url="https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup"
+    echo -e "${YELLOW}Running Sysinfo from GitHub...${NC}"
+    curl -sL "${base_url}/${filename}" | bash &
+    spinner
+    echo -e "${GREEN}Completed: Sysinfo${NC}\n"
+}
+
+# Function for Nginx (one-liner curl)
+run_nginx() {
+    local filename="12-nginx.sh"
+    local base_url="https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup"
+    echo -e "${YELLOW}Running Nginx from GitHub...${NC}"
+    curl -sL "${base_url}/${filename}" | bash &
+    spinner
+    echo -e "${GREEN}Completed: Nginx${NC}\n"
 }
 
 # Function for Google IDX setup (one-liner curl)
 run_google_idx() {
+    local filename="Google-IDX/17-Google%20IDX-setup.sh"
+    local base_url="https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup"
     echo -e "${YELLOW}Running Google IDX setup from GitHub...${NC}"
-    curl -fsSL "https://raw.githubusercontent.com/R2Ksanu/vps-setup/main/Google-IDX/17-Google-IDX-setup.sh" | bash &
+    curl -sL "${base_url}/${filename}" | bash &
     spinner
     echo -e "${GREEN}Completed: Google IDX setup${NC}\n"
 }
@@ -78,17 +177,17 @@ while true; do
     read -p "Enter your choice (0-12): " choice
 
     case $choice in
-        1) run_script "1-base-setup.sh" ;;
-        2) run_script "2-fastfetch.sh" ;;
-        3) run_script "3-nodejs.sh" ;;
-        4) run_script "4-sshx.sh" ;;
-        5) run_script "5-docker.sh" ;;
-        6) run_script "7-firewall-fail2ban.sh" ;;
-        7) run_script "8-pm2.sh" ;;
-        8) run_script "9-fastfetch-login.sh" ;;
-        9) run_script "10-cleanup.sh" ;;
-        10) run_script "11-sysinfo.sh" ;;
-        11) run_script "12-nginx.sh" ;;
+        1) run_base_setup ;;
+        2) run_fastfetch ;;
+        3) run_nodejs ;;
+        4) run_sshx ;;
+        5) run_docker ;;
+        6) run_firewall_fail2ban ;;
+        7) run_pm2 ;;
+        8) run_fastfetch_login ;;
+        9) run_cleanup ;;
+        10) run_sysinfo ;;
+        11) run_nginx ;;
         12) run_google_idx ;;
         0) echo -e "${GREEN}Exiting VPS Setup Tool. Goodbye!${NC}"; exit 0 ;;
         *) echo -e "${RED}Invalid choice! Please try again.${NC}\n" ;;
