@@ -7,13 +7,28 @@
 # Version: 3.0
 # ==========================================================
 
+# Colors (define here if not in includes)
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
 # Logging
 exec > >(tee -i setup_log.txt)
 exec 2>&1
 
 # Load includes
-source includes/spinner.sh
-source includes/banner.sh
+if [ -f "includes/spinner.sh" ]; then
+    source includes/spinner.sh
+else
+    echo -e "${RED}[!] includes/spinner.sh not found. Skipping...${NC}"
+fi
+if [ -f "includes/banner.sh" ]; then
+    source includes/banner.sh
+else
+    echo -e "${RED}[!] includes/banner.sh not found. Skipping...${NC}"
+fi
 
 # Root check
 if [ "$EUID" -ne 0 ]; then
@@ -21,11 +36,25 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Banner
+# Banner (fallback if show_banner not defined)
+show_banner() {
+    cat << 'EOF'
+ ██████╗ ██████╗ ██╗ ██╗ ████████╗ ██████╗ ██████╗ ██╗ ███████╗
+██╔══██╗██╔══██╗██║ ██╔╝ ╚══██╔══╝██╔═══██╗██╔═══██╗██║ ██╔════╝
+██████╔╝██████╔╝█████╔╝  █║ █║ █║ █║ █║ █████║
+██╔══██╗██╔══██╗██╔═██╗  █║ █║ █║ █║ █║██║ ██╔══╝
+██║  ██║ █║██║ █║ ██║ ╚██████╔╝╚██████╔╝███████╗███████╗
+╚═╝  ╚═╝ ╚═╝╚═╝ ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝╚══════╝
+                   VPS Tool Setup - Version 3.0
+EOF
+    echo -e "${GREEN}Powered by @Hopingboyz & R2Ksanu${NC}"
+}
 show_banner
 
 # Main menu
 while true; do
+    clear
+    show_banner
     echo -e "\n${YELLOW}Choose an option to install or configure:${NC}"
     echo -e "${CYAN}1)${NC} Base setup (sudo, tmate, apt update/upgrade)"
     echo -e "${CYAN}2)${NC} Install Fastfetch"
@@ -59,6 +88,7 @@ while true; do
     elif [ "$choice" -eq 12 ] && [ -f "$google_setup" ]; then
         bash "$google_setup"
     else
-        echo -e "${RED}❌ Invalid choice. Try again.${NC}"
+        echo -e "${RED}❌ Invalid choice or missing script. Try again.${NC}"
+        sleep 2
     fi
 done

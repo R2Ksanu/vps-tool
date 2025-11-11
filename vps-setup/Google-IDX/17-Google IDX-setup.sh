@@ -2,13 +2,33 @@
 # ==========================================================
 # Google IDX Sub-Setup Script
 # Handles IDX-related tools (RDP, Playit, 24/7, etc.)
-# Author: @Hopingboyz
+# Author: @Hopingboyz & R2Ksanu
 # ==========================================================
 
-source includes/spinner.sh
-source includes/banner.sh
+# Colors (define here if not loaded)
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Load includes (relative to main dir)
+if [ -f "../includes/spinner.sh" ]; then
+    source ../includes/spinner.sh
+fi
+if [ -f "../includes/banner.sh" ]; then
+    source ../includes/banner.sh
+fi
 
 clear
+show_banner() {
+    cat << 'EOF'
+  ╔══════════════════════════════════════════════════════════════╗
+  ║                 Google IDX Tools Setup                       ║
+  ║                 Powered by   R2Ksanu                         ║
+  ╚══════════════════════════════════════════════════════════════╝
+EOF
+}
 show_banner
 
 while true; do
@@ -29,16 +49,14 @@ while true; do
     fi
 
     google_script="Google IDX/${sub_choice}-"*.sh
+    vm_maker="Google IDX/VPS-setup-Google IDX-VM Maker-@Hopingboyz.sh"
 
-    if [ -f $google_script ]; then
+    if [ -f "$google_script" ]; then
         bash "$google_script"
-    elif [ "$sub_choice" -eq 17 ]; then
-        if [ -f "Google IDX/VPS-setup-Google IDX-VM Maker-@Hopingboyz.sh" ]; then
-            bash "Google IDX/VPS-setup-Google IDX-VM Maker-@Hopingboyz.sh"
-        else
-            echo -e "${RED}[!] VM Maker script not found in Google IDX folder!${NC}"
-        fi
+    elif [ "$sub_choice" -eq 17 ] && [ -f "$vm_maker" ]; then
+        bash "$vm_maker"
     else
         echo -e "${RED}❌ Invalid choice or missing script for option ${sub_choice}.${NC}"
+        sleep 2
     fi
 done
