@@ -18,7 +18,7 @@ PURPLE='\033[0;35m'
 NC='\033[0m'
 
 # ================================
-# Spinner function (fixed cleanup)
+# Spinner function
 # ================================
 spinner() {
     local pid=$1
@@ -26,13 +26,13 @@ spinner() {
     local delay=0.1
     local spinstr='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
     local i=0
-    while kill -0 $pid 2>/dev/null; do
+    while kill -0 "$pid" 2>/dev/null; do
         local char="${spinstr:$i:1}"
         printf "\r\033[K[%s] %s" "$char" "$msg"
         ((i = (i + 1) % ${#spinstr}))
         sleep $delay
     done
-    wait $pid
+    wait "$pid"
     local exit_code=$?
     printf "\r\033[K"
     if [[ $exit_code -eq 0 ]]; then
@@ -96,16 +96,23 @@ optimize_apt() {
         sudo apt autoremove -y -qq
         sudo apt autoclean -qq
         sudo apt clean -qq
-    ) & spinner "Optimizing packages..."
+    ) &
+    pid=$!
+    spinner $pid "Optimizing packages..."
 }
 
 run_fastfetch() {
-    if command_exists fastfetch; then echo -e "${GREEN}✔ Fastfetch already installed.${NC}"; return; fi
+    if command_exists fastfetch; then 
+        echo -e "${GREEN}✔ Fastfetch already installed.${NC}"; 
+        return; 
+    fi
     (
         sudo add-apt-repository -y ppa:fastfetch-cli/fastfetch >/dev/null 2>&1 || true
         sudo apt update -qq
         sudo apt install -y fastfetch >/dev/null 2>&1 || sudo snap install fastfetch --classic
-    ) & spinner "Installing Fastfetch..."
+    ) &
+    pid=$!
+    spinner $pid "Installing Fastfetch..."
 }
 
 run_nodejs() {
@@ -115,16 +122,25 @@ run_nodejs() {
     (
         curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - >/dev/null 2>&1
         sudo apt install -y nodejs >/dev/null 2>&1
-    ) & spinner "Installing Node.js..."
+    ) &
+    pid=$!
+    spinner $pid "Installing Node.js..."
 }
 
-run_sshx() { (curl -sSf https://sshx.io/get | sh >/dev/null 2>&1) & spinner "Installing SSHX..."; }
+run_sshx() {
+    (curl -sSf https://sshx.io/get | sh >/dev/null 2>&1) &
+    pid=$!
+    spinner $pid "Installing SSHX..."
+}
+
 run_docker() {
     if command_exists docker; then echo -e "${GREEN}✔ Docker already installed.${NC}"; return; fi
     (
         curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh >/dev/null 2>&1 && rm get-docker.sh
         sudo usermod -aG docker "$USER"
-    ) & spinner "Installing Docker..."
+    ) &
+    pid=$!
+    spinner $pid "Installing Docker..."
 }
 
 run_firewall_fail2ban() {
@@ -136,20 +152,43 @@ run_firewall_fail2ban() {
         sudo ufw --force enable >/dev/null 2>&1
         sudo systemctl enable fail2ban >/dev/null 2>&1
         sudo systemctl start fail2ban >/dev/null 2>&1
-    ) & spinner "Configuring Firewall & Fail2Ban..."
+    ) &
+    pid=$!
+    spinner $pid "Configuring Firewall & Fail2Ban..."
 }
 
-run_pm2() { (sudo npm install -g pm2 >/dev/null 2>&1 && pm2 startup >/dev/null 2>&1) & spinner "Installing PM2..."; }
-run_fastfetch_login() { grep -q fastfetch ~/.bashrc || echo "fastfetch" >>~/.bashrc; echo -e "${GREEN}✔ Added Fastfetch to .bashrc${NC}"; }
-run_cleanup() { (sudo apt autoremove -y && sudo apt autoclean -y && sudo apt clean -y) & spinner "Cleaning system..."; }
+run_pm2() {
+    (sudo npm install -g pm2 >/dev/null 2>&1 && pm2 startup >/dev/null 2>&1) &
+    pid=$!
+    spinner $pid "Installing PM2..."
+}
+
+run_fastfetch_login() { 
+    grep -q fastfetch ~/.bashrc || echo "fastfetch" >>~/.bashrc
+    echo -e "${GREEN}✔ Added Fastfetch to .bashrc${NC}" 
+}
+
+run_cleanup() { 
+    (sudo apt autoremove -y && sudo apt autoclean -y && sudo apt clean -y) &
+    pid=$!
+    spinner $pid "Cleaning system..."
+}
+
 run_sysinfo() { command_exists fastfetch && fastfetch || (neofetch || uname -a && free -h && df -h); }
-run_nginx() { (sudo apt install -y nginx >/dev/null 2>&1 && sudo systemctl enable nginx && sudo systemctl start nginx) & spinner "Installing Nginx..."; }
+
+run_nginx() {
+    (sudo apt install -y nginx >/dev/null 2>&1 && sudo systemctl enable nginx && sudo systemctl start nginx) &
+    pid=$!
+    spinner $pid "Installing Nginx..."
+}
 
 run_google_idx() {
     echo -e "${CYAN}Launching Google IDX Toolkit...${NC}"
     (
         curl -sL https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/Google-IDX/google-idx.sh | bash
-    ) & spinner "Launching Google IDX Toolkit..."
+    ) &
+    pid=$!
+    spinner $pid "Launching Google IDX Toolkit..."
 }
 
 run_mongodb() {
@@ -161,11 +200,22 @@ run_mongodb() {
         | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list >/dev/null
         sudo apt update -qq && sudo apt install -y mongodb-org >/dev/null
         sudo systemctl enable mongod && sudo systemctl start mongod
-    ) & spinner "Installing MongoDB..."
+    ) &
+    pid=$!
+    spinner $pid "Installing MongoDB..."
 }
 
-run_certbot() { (sudo apt install -y certbot python3-certbot-nginx >/dev/null 2>&1) & spinner "Installing Certbot..."; }
-run_python_env() { (sudo apt install -y python3 python3-pip python3-venv >/dev/null 2>&1 && python3 -m venv ~/venv) & spinner "Setting up Python Env..."; }
+run_certbot() {
+    (sudo apt install -y certbot python3-certbot-nginx >/dev/null 2>&1) &
+    pid=$!
+    spinner $pid "Installing Certbot..."
+}
+
+run_python_env() {
+    (sudo apt install -y python3 python3-pip python3-venv >/dev/null 2>&1 && python3 -m venv ~/venv) &
+    pid=$!
+    spinner $pid "Setting up Python Env..."
+}
 
 # ================================
 # Main Menu
