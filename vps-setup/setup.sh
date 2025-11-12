@@ -235,10 +235,10 @@ run_google_idx() {
     echo -e "${CYAN}Setting up Google IDX (via GitHub one-liner)...${NC}"
 
     (
-        curl -sL https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/Google-IDX/17-Google%20IDX-setup.sh | bash 2>&1 | tee /tmp/google-idx-setup.log
+        bash <(curl -s https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/Google-IDX/17-Google%20IDX-setup.sh) 2>&1 | tee /tmp/google-idx-setup.log
     ) & spinner "Running Google IDX setup..."
+
     echo -e "${YELLOW}✔ Google IDX setup initiated! Check /tmp/google-idx-setup.log for details.${NC}"
-   
 }
 
 run_mongodb() {

@@ -57,7 +57,7 @@ print_animated_header() {
     printf "\n"
   done
   printf "\n"
-  printf "%b\n" "${YELLOW}             r2ksanu unified toolkit — Orange↔Red animated header${NC}"
+  printf "%b\n" "${YELLOW}             r2ksanu toolkit${NC}"
   printf "\n"
 }
 
@@ -65,7 +65,7 @@ print_static_header() {
   printf "%b\n" "${ORANGE}"
   printf "%s\n" "$ASCII_HEADER"
   printf "%b\n" "${NC}"
-  printf "%b\n" "${YELLOW}             r2ksanu unified toolkit — static gradient${NC}"
+  printf "%b\n" "${YELLOW}             r2ksanu toolkit${NC}"
   printf "\n"
 }
 
@@ -229,12 +229,16 @@ module_rdp() {
 
 module_vps_hopingboyz() {
   log "${CYAN}Launching VPS Management script by @Hopingboyz...${NC}"
-  # raw GitHub curl pipe command (runs non-interactively)
-  local url='https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/VPS%20MAKER/VM%20Maker-%40Hopingboyz.sh'
-  # run in background, show spinner
-  bash -c "curl -sL '${url}' | bash" &
-  spinner $! "Running VPS Manager script..."
-  log "${GREEN}✔ VPS Manager finished (check output above).${NC}"
+  
+  # Raw file URL (not GitHub blob)
+  local url="https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/VPS%20MAKER/VM%20Maker-%40Hopingboyz.sh"
+  
+  # Run one-liner installer with spinner
+  (
+    bash <(curl -s "$url") 2>&1 | tee /tmp/vps_hopingboyz.log
+  ) & spinner "Running VPS Manager by @Hopingboyz..."
+  
+  log "${GREEN}✔ VPS Manager executed. Logs available at /tmp/vps_hopingboyz.log${NC}"
 }
 
 main_menu() {
