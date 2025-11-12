@@ -1,6 +1,6 @@
 #!/bin/bash
+# R2K Main Menu Launcher
 
-# Gradient function (Red to Blue)
 function gradient_text() {
     text="$1"
     len=${#text}
@@ -14,7 +14,6 @@ function gradient_text() {
     echo -e "\e[0m"
 }
 
-# ASCII ART with Gradient
 ascii_art() {
     clear
     echo ""
@@ -29,20 +28,18 @@ ascii_art() {
     echo ""
 }
 
-# Menu Display
 show_menu() {
     echo -e "\e[36m[ 1 ] VPS Tool"
     echo -e "[ 2 ] Minecraft Tool"
     echo -e "[ 0 ] Exit"
     echo ""
-    read -p "Select your option below = " choice
+    echo -ne "Select your option below = "
+    read choice
 }
 
-# Main Logic
 main() {
     ascii_art
     show_menu
-
     case "$choice" in
         1)
             echo -e "\e[34m[+] Cloning and running VPS Tool...\e[0m"
@@ -65,6 +62,3 @@ main() {
 }
 
 main
-
-# Optional: Make the script executable and rerun itself only if executed directly
-[[ $0 != bash ]] && chmod +x r2k-tools.sh && ./r2k-tools.sh
