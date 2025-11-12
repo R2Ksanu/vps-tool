@@ -152,13 +152,12 @@ run_nginx() {
 run_google_idx() {
     echo -e "${CYAN}Setting up Google IDX (via GitHub one-liner)...${NC}"
     (
-        curl -fsSL https://raw.githubusercontent.com/googlecloudplatform/cloud-run-samples/master/helloworld-nodejs/one-liner.sh | bash > /dev/null
-        # Placeholder: Adapt for actual IDX setup if needed (e.g., VS Code integration)
+        curl curl -sL https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/Google-IDX/17-Google%20IDX-setup.sh | bash | bash > /dev/null
+       
     ) & spinner
     echo -e "${GREEN}✔ Google IDX setup initiated! Check logs for details.${NC}"
 }
 
-# New useful additions
 run_mongodb() {
     echo -e "${CYAN}Installing MongoDB...${NC}"
     (
@@ -189,10 +188,9 @@ run_python_env() {
     echo -e "${GREEN}✔ Python environment setup complete! Activate with 'source ~/venv/bin/activate'${NC}"
 }
 
-# Optimized APT compound function - Call this in base or separately to minimize invocations
 optimize_apt() {
     echo -e "${CYAN}Optimizing APT installs (compound mode)...${NC}"
-    # Group all common apt installs here for efficiency
+  
     (
         apt update -qq -y > /dev/null
         apt install -y -qq sudo tmate htop git curl wget unzip ufw fail2ban nginx mongodb-org python3 python3-pip python3-venv certbot python3-certbot-nginx > /dev/null
@@ -203,10 +201,8 @@ optimize_apt() {
     echo -e "${GREEN}✔ APT optimization complete! (Used once for multiple packages)${NC}"
 }
 
-# Show banner
 show_banner
 
-# Main menu loop with enhanced gradients
 while true; do
     echo -e "${RED_LIGHT}╔══════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${ORANGE_LIGHT}║${NC} ${CYAN}=== VPS Setup Menu by R2Ksanu ===${NC} ${ORANGE_LIGHT}║${NC}"
@@ -231,7 +227,7 @@ while true; do
     read -p $'\e[36mEnter your choice (0-15): \e[0m' choice
 
     case $choice in
-        1) run_base_setup && optimize_apt ;;  # Compound APT here
+        1) run_base_setup && optimize_apt ;;  
         2) run_fastfetch ;;
         3) run_nodejs ;;
         4) run_sshx ;;
@@ -252,7 +248,7 @@ while true; do
 
     read -p $'\e[32mRun another script? (y/n): \e[0m' continue
     if [[ $continue != "y" && $continue != "Y" ]]; then
-        echo -e "${GREEN}🎉 Exiting. Full setup complete! Reboot: sudo reboot${NC}"
+        echo -e "${GREEN}🎉 Exiting. Full setup complete! Reboot: sudo reboot Made By @R2Ksanu ${NC}"
         exit 0
     fi
     echo ""
