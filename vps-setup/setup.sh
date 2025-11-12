@@ -148,7 +148,7 @@ run_nginx() { (sudo apt install -y nginx >/dev/null 2>&1 && sudo systemctl enabl
 run_google_idx() {
     echo -e "${CYAN}Setting up Google IDX (via GitHub one-liner)...${NC}"
     (
-        bash <(curl -s https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/Google-IDX/17-Google%20IDX-setup.sh) \
+        bash <(curl -s https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/Google-IDX/google-idx.sh) \
         2>&1 | tee /tmp/google-idx-setup.log
     ) & spinner "Running Google IDX setup..."
 }
