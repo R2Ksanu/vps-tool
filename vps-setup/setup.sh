@@ -1,210 +1,238 @@
 #!/bin/bash
+# ==============================================================
+# 🌐 VPS Setup Tool — Pro Edition by R2Ksanu
+# ==============================================================
 
-# ================================
-# VPS Setup Tool by R2Ksanu
-# ================================
-
-# Colors
-RED_LIGHT='\033[1;91m'
-ORANGE_LIGHT='\033[1;93m'
-RED_MEDIUM='\033[1;31m'
-ORANGE_MEDIUM='\033[1;33m'
-RED_DARK='\033[0;31m'
-ORANGE_DARK='\033[0;33m'
-GREEN='\033[1;32m'
-CYAN='\033[0;36m'
-PURPLE='\033[0;35m'
+# 🎨 Colors
+RED='\033[1;91m'
+YELLOW='\033[1;93m'
+GREEN='\033[1;92m'
+BLUE='\033[1;94m'
+MAGENTA='\033[1;95m'
+CYAN='\033[1;96m'
+WHITE='\033[1;97m'
 NC='\033[0m'
 
-# ================================
-# Banner Display
-# ================================
-animate_banner() {
-    local text="$1"
-    local delay=0.03
+# ==============================================================
+# ✨ Animation & UI Helpers
+# ==============================================================
+animate_text() {
+    local text="$1" delay="${2:-0.03}"
     for ((i=0; i<${#text}; i++)); do
         printf "%s" "${text:$i:1}"
-        sleep $delay
+        sleep "$delay"
     done
     echo ""
 }
 
-show_banner() {
-    clear
-    echo -e "${RED_LIGHT}  ██████╗ ██████╗  ██████╗██╗  ██╗     ██████╗ ██╗  ██╗███████╗${NC}"
-    echo -e "${ORANGE_LIGHT}██╔════╝██╔═══██╗██╔════╝██║ ██╔╝     ██╔══██╗██║  ██║██╔════╝${NC}"
-    echo -e "${RED_MEDIUM}██║     ██║   ██║██║     █████╔╝█████╗██║  ██║███████║█████╗  ${NC}"
-    echo -e "${ORANGE_MEDIUM}██║     ██║   ██║██║     ██╔═██╗╚════╝██║  ██║██╔══██║██╔══╝  ${NC}"
-    echo -e "${RED_DARK}╚██████╗╚██████╔╝╚██████╗██║  ██╗     ██████╔╝██║  ██║███████╗${NC}"
-    echo -e "${ORANGE_DARK} ╚═════╝ ╚════╝  ╚═════╝╚═╝  ╚═╝     ╚═════╝ ╚═╝  ╚═╝╚══════╝${NC}"
-    echo ""
-    echo -e "${CYAN}💻 Enhanced VPS Tool Setup by R2Ksanu${NC}"
-    animate_banner "🚀 Ready to boost your VPS! 🚀"
-    sleep 1
+spinner() {
+    local pid=$!
+    local spin='|/-\'
+    local i=0
+    while kill -0 $pid 2>/dev/null; do
+        printf "\r${CYAN}⏳ ${spin:$i:1}${NC}"
+        i=$(( (i+1) %4 ))
+        sleep 0.1
+    done
+    printf "\r${GREEN}✔ Done!${NC}\n"
 }
 
-# ================================
-# Utility Functions
-# ================================
+progress_bar() {
+    local duration=${1:-3}
+    local width=30
+    local fill="█"
+    local empty="░"
+    for ((i=0; i<=width; i++)); do
+        local percent=$((i * 100 / width))
+        printf "\r${MAGENTA}[${CYAN}"
+        for ((j=0; j<i; j++)); do printf "${fill}"; done
+        for ((j=i; j<width; j++)); do printf "${empty}"; done
+        printf "${MAGENTA}] ${WHITE}%3d%%" "$percent"
+        sleep "$(bc -l <<< "$duration/$width")"
+    done
+    echo ""
+}
+
+# ==============================================================
+# 🚀 Banner
+# ==============================================================
+show_banner() {
+    clear
+    echo -e "${RED}"
+    echo "╔════════════════════════════════════════════════════════╗"
+    echo "║        🚀 VPS SETUP TOOL — Pro Edition by R2Ksanu       ║"
+    echo "╚════════════════════════════════════════════════════════╝"
+    echo -e "${NC}"
+    animate_text "${CYAN}💻 Setting up your VPS environment...${NC}" 0.03
+    progress_bar 2
+    echo ""
+}
+
+# ==============================================================
+# ⚙️ Utilities
+# ==============================================================
 command_exists() { command -v "$1" &>/dev/null; }
 is_package_installed() { dpkg -l | grep -q "^ii  $1 "; }
 
-# ================================
-# Core Tasks
-# ================================
+# ==============================================================
+# 🧩 Core Functions
+# ==============================================================
+
 optimize_apt() {
-    echo -e "${CYAN}>>> Optimizing APT...${NC}"
-    sudo apt update && sudo apt upgrade -y
-    local pkgs=(sudo tmate htop git curl wget unzip ufw fail2ban nginx python3 python3-pip python3-venv certbot python3-certbot-nginx)
-    for pkg in "${pkgs[@]}"; do
-        if ! is_package_installed "$pkg"; then
-            echo -e "${ORANGE_LIGHT}Installing: $pkg${NC}"
-            sudo apt install -y "$pkg"
-        fi
-    done
-    sudo apt autoremove -y && sudo apt autoclean -y && sudo apt clean -y
+    echo -e "\n${YELLOW}🔄 Optimizing APT and installing base packages...${NC}"
+    {
+        sudo apt update -y && sudo apt upgrade -y
+        local pkgs=(sudo tmate htop git curl wget unzip ufw fail2ban nginx python3 python3-pip python3-venv certbot python3-certbot-nginx)
+        for pkg in "${pkgs[@]}"; do
+            if ! is_package_installed "$pkg"; then
+                echo -e "${BLUE}📦 Installing: ${pkg}${NC}"
+                sudo apt install -y "$pkg"
+            fi
+        done
+        sudo apt autoremove -y && sudo apt autoclean -y && sudo apt clean -y
+    } & spinner
 }
 
 run_fastfetch() {
-    echo -e "${CYAN}>>> Installing Fastfetch...${NC}"
-    if command_exists fastfetch; then 
-        echo -e "${GREEN}✔ Fastfetch already installed.${NC}"; 
-        return; 
-    fi
-    sudo add-apt-repository -y ppa:fastfetch-cli/fastfetch || true
-    sudo apt update
-    sudo apt install -y fastfetch || sudo snap install fastfetch --classic
+    echo -e "\n${YELLOW}🖥 Installing Fastfetch...${NC}"
+    {
+        if command_exists fastfetch; then
+            echo -e "${GREEN}✔ Already installed.${NC}"
+        else
+            sudo add-apt-repository -y ppa:fastfetch-cli/fastfetch || true
+            sudo apt update && sudo apt install -y fastfetch || sudo snap install fastfetch --classic
+        fi
+    } & spinner
 }
 
 run_nodejs() {
-    echo -e "${CYAN}>>> Installing Node.js v22...${NC}"
-    if command_exists node && node --version | grep -q "v22"; then
-        echo -e "${GREEN}✔ Node.js v22 already installed.${NC}"
-        return
-    fi
-    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-    sudo apt install -y nodejs
+    echo -e "\n${YELLOW}⚡ Installing Node.js v22...${NC}"
+    {
+        if command_exists node && node --version | grep -q "v22"; then
+            echo -e "${GREEN}✔ Node.js v22 already installed.${NC}"
+        else
+            curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+            sudo apt install -y nodejs
+        fi
+    } & spinner
 }
 
 run_sshx() {
-    echo -e "${CYAN}>>> Installing SSHX...${NC}"
-    curl -sSf https://sshx.io/get | sh
+    echo -e "\n${YELLOW}🔗 Installing SSHX...${NC}"
+    { curl -sSf https://sshx.io/get | sh; } & spinner
 }
 
 run_docker() {
-    echo -e "${CYAN}>>> Installing Docker...${NC}"
-    if command_exists docker; then 
-        echo -e "${GREEN}✔ Docker already installed.${NC}"; 
-        return
-    fi
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sh get-docker.sh
-    rm get-docker.sh
-    sudo usermod -aG docker "$USER"
+    echo -e "\n${YELLOW}🐳 Installing Docker...${NC}"
+    {
+        if command_exists docker; then
+            echo -e "${GREEN}✔ Docker already installed.${NC}"
+        else
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sh get-docker.sh && rm get-docker.sh
+            sudo usermod -aG docker "$USER"
+        fi
+    } & spinner
 }
 
 run_firewall_fail2ban() {
-    echo -e "${CYAN}>>> Configuring Firewall & Fail2Ban...${NC}"
-    sudo apt install -y ufw fail2ban
-    sudo ufw allow OpenSSH
-    sudo ufw allow 80/tcp
-    sudo ufw allow 443/tcp
-    sudo ufw --force enable
-    sudo systemctl enable fail2ban
-    sudo systemctl start fail2ban
+    echo -e "\n${YELLOW}🛡 Configuring Firewall & Fail2Ban...${NC}"
+    {
+        sudo apt install -y ufw fail2ban
+        sudo ufw allow OpenSSH
+        sudo ufw allow 80/tcp
+        sudo ufw allow 443/tcp
+        sudo ufw --force enable
+        sudo systemctl enable fail2ban --now
+    } & spinner
 }
 
 run_pm2() {
-    echo -e "${CYAN}>>> Installing PM2...${NC}"
-    sudo npm install -g pm2
-    pm2 startup
+    echo -e "\n${YELLOW}🔁 Installing PM2...${NC}"
+    { sudo npm install -g pm2 && pm2 startup; } & spinner
 }
 
 run_fastfetch_login() {
-    echo -e "${CYAN}>>> Adding Fastfetch to .bashrc...${NC}"
-    grep -q fastfetch ~/.bashrc || echo "fastfetch" >>~/.bashrc
-    echo -e "${GREEN}✔ Added Fastfetch to .bashrc${NC}"
+    echo -e "\n${YELLOW}⚙️ Adding Fastfetch to login...${NC}"
+    { grep -q fastfetch ~/.bashrc || echo "fastfetch" >> ~/.bashrc; } & spinner
 }
 
 run_cleanup() {
-    echo -e "${CYAN}>>> Cleaning System...${NC}"
-    sudo apt autoremove -y
-    sudo apt autoclean -y
-    sudo apt clean -y
+    echo -e "\n${YELLOW}🧹 Cleaning system...${NC}"
+    { sudo apt autoremove -y && sudo apt autoclean -y && sudo apt clean -y; } & spinner
 }
 
 run_sysinfo() {
-    echo -e "${CYAN}>>> Displaying System Info...${NC}"
-    command_exists fastfetch && fastfetch || (neofetch || uname -a && free -h && df -h)
+    echo -e "\n${YELLOW}📊 System Information:${NC}"
+    sleep 1
+    command_exists fastfetch && fastfetch || neofetch || uname -a
 }
 
 run_nginx() {
-    echo -e "${CYAN}>>> Installing Nginx...${NC}"
-    sudo apt install -y nginx
-    sudo systemctl enable nginx
-    sudo systemctl start nginx
+    echo -e "\n${YELLOW}🌐 Installing Nginx...${NC}"
+    { sudo apt install -y nginx && sudo systemctl enable nginx --now; } & spinner
 }
 
 run_google_idx() {
-    echo -e "${CYAN}>>> Launching Google IDX Toolkit...${NC}"
-    curl -sL https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/Google-IDX/google-idx.sh | bash
+    echo -e "\n${YELLOW}🧠 Installing Google IDX Toolkit...${NC}"
+    { curl -sL https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/Google-IDX/google-idx.sh | bash; } & spinner
 }
 
 run_mongodb() {
-    echo -e "${CYAN}>>> Installing MongoDB...${NC}"
-    if command_exists mongod; then 
-        echo -e "${GREEN}✔ MongoDB already installed.${NC}"
-        return
-    fi
-    wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
-    echo "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg] \
-    https://repo.mongodb.org/apt/ubuntu $(lsb_release -sc 2>/dev/null || echo jammy)/mongodb-org/7.0 multiverse" \
-    | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
-    sudo apt update && sudo apt install -y mongodb-org
-    sudo systemctl enable mongod
-    sudo systemctl start mongod
+    echo -e "\n${YELLOW}🍃 Installing MongoDB...${NC}"
+    {
+        if command_exists mongod; then
+            echo -e "${GREEN}✔ MongoDB already installed.${NC}"
+        else
+            wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
+            echo "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg] \
+            https://repo.mongodb.org/apt/ubuntu $(lsb_release -sc 2>/dev/null || echo jammy)/mongodb-org/7.0 multiverse" \
+            | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+            sudo apt update && sudo apt install -y mongodb-org
+            sudo systemctl enable mongod --now
+        fi
+    } & spinner
 }
 
 run_certbot() {
-    echo -e "${CYAN}>>> Installing Certbot...${NC}"
-    sudo apt install -y certbot python3-certbot-nginx
+    echo -e "\n${YELLOW}🔐 Installing Certbot SSL...${NC}"
+    { sudo apt install -y certbot python3-certbot-nginx; } & spinner
 }
 
 run_python_env() {
-    echo -e "${CYAN}>>> Setting up Python Virtual Environment...${NC}"
-    sudo apt install -y python3 python3-pip python3-venv
-    python3 -m venv ~/venv
+    echo -e "\n${YELLOW}🐍 Setting up Python Virtual Environment...${NC}"
+    { sudo apt install -y python3 python3-pip python3-venv && python3 -m venv ~/venv; } & spinner
 }
 
-# ================================
-# Main Menu
-# ================================
+# ==============================================================
+# 🧭 Main Menu
+# ==============================================================
 show_banner
 
 while true; do
-    echo -e "${RED_LIGHT}╔══════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${ORANGE_LIGHT}║ ${CYAN}=== VPS Setup Menu by R2Ksanu ===${NC} ${ORANGE_LIGHT}║${NC}"
-    echo -e "${RED_MEDIUM}╠══════════════════════════════════════════════════════════════╣${NC}"
-    echo -e "${ORANGE_MEDIUM}║ 1. Base Setup + APT Optimize                                 ║${NC}"
-    echo -e "${RED_LIGHT}║ 2. Fastfetch (System info tool)                              ║${NC}"
-    echo -e "${ORANGE_LIGHT}║ 3. Node.js v22 LTS                                           ║${NC}"
-    echo -e "${RED_MEDIUM}║ 4. SSHX (Collaborative SSH)                                  ║${NC}"
-    echo -e "${ORANGE_MEDIUM}║ 5. Docker (Containerization)                                 ║${NC}"
-    echo -e "${RED_DARK}║ 6. Firewall + Fail2Ban (Security)                            ║${NC}"
-    echo -e "${ORANGE_DARK}║ 7. PM2 (Process Manager)                                     ║${NC}"
-    echo -e "${RED_LIGHT}║ 8. Fastfetch on Login                                        ║${NC}"
-    echo -e "${ORANGE_LIGHT}║ 9. System Cleanup                                            ║${NC}"
-    echo -e "${RED_MEDIUM}║ 10. Sysinfo (Display info)                                   ║${NC}"
-    echo -e "${ORANGE_MEDIUM}║ 11. Nginx (Web Server)                                       ║${NC}"
-    echo -e "${RED_DARK}║ 12. Google IDX Setup (GitHub one-liner)                      ║${NC}"
-    echo -e "${ORANGE_DARK}║ 13. MongoDB (Database)                                       ║${NC}"
-    echo -e "${RED_LIGHT}║ 14. Certbot SSL (Certificates)                               ║${NC}"
-    echo -e "${ORANGE_LIGHT}║ 15. Python Env (Virtual Env)                                 ║${NC}"
-    echo -e "${RED_MEDIUM}║ 0. Exit                                                      ║${NC}"
-    echo -e "${ORANGE_MEDIUM}╚══════════════════════════════════════════════════════════════╝${NC}"
-
-    echo -ne "${CYAN}Enter your choice (0-15): ${NC}"
-    read choice
+    echo -e "${BLUE}"
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║                VPS SETUP MENU — R2Ksanu Pro                ║"
+    echo "╠════════════════════════════════════════════════════════════╣"
+    echo "║  1.  Base Setup + APT Optimize                             ║"
+    echo "║  2.  Fastfetch (System Info Tool)                          ║"
+    echo "║  3.  Node.js v22 LTS                                       ║"
+    echo "║  4.  SSHX (Collaborative SSH)                              ║"
+    echo "║  5.  Docker (Containerization)                             ║"
+    echo "║  6.  Firewall + Fail2Ban (Security)                        ║"
+    echo "║  7.  PM2 (Process Manager)                                 ║"
+    echo "║  8.  Fastfetch on Login                                    ║"
+    echo "║  9.  System Cleanup                                        ║"
+    echo "║ 10.  Sysinfo (Display Info)                                ║"
+    echo "║ 11.  Nginx (Web Server)                                    ║"
+    echo "║ 12.  Google IDX Setup (One-liner)                          ║"
+    echo "║ 13.  MongoDB (Database)                                    ║"
+    echo "║ 14.  Certbot SSL (Certificates)                            ║"
+    echo "║ 15.  Python Env (Virtual Env)                              ║"
+    echo "║  0.  Exit                                                  ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
+    echo -ne "${CYAN}Enter your choice (0–15): ${NC}"
+    read -r choice
 
     case $choice in
         1) optimize_apt ;;
@@ -222,15 +250,15 @@ while true; do
         13) run_mongodb ;;
         14) run_certbot ;;
         15) run_python_env ;;
-        0) echo -e "${GREEN}Exiting VPS Setup Tool. Goodbye!${NC}"; exit 0 ;;
-        *) echo -e "${RED_DARK}Invalid choice! Please try again.${NC}"; sleep 1 ;;
+        0) echo -e "${GREEN}👋 Exiting VPS Setup Tool. Goodbye!${NC}"; exit 0 ;;
+        *) echo -e "${RED}❌ Invalid choice! Try again.${NC}" ;;
     esac
 
-    echo -ne "${GREEN}Run another script? (y/n): ${NC}"
-    read continue
-    [[ ! $continue =~ ^[Yy]$ ]] && {
-        echo -e "${PURPLE}🎉 Full setup complete! Consider reboot: sudo reboot${NC}"
-        echo -e "${CYAN}✨ Made by R2Ksanu${NC}"
+    echo -ne "\n${GREEN}🔁 Run another task? (y/n): ${NC}"
+    read -r again
+    [[ ! $again =~ ^[Yy]$ ]] && {
+        echo -e "\n${MAGENTA}🎉 Setup complete! Consider rebooting your VPS.${NC}"
+        echo -e "${CYAN}✨ Made with ❤️ by R2Ksanu${NC}"
         exit 0
     }
 done
