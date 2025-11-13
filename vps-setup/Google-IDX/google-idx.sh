@@ -32,32 +32,28 @@ LOGFILE="/var/log/24-7.log"
 # ---------------------------
 # Output helpers
 # ---------------------------
-log()  { printf "%b\n" "$1"; }
 info() { printf "%b\n" "${CYAN}${1}${NC}"; }
 ok()   { printf "%b\n" "${GREEN}✔ ${1}${NC}"; }
 warn() { printf "%b\n" "${YELLOW}⚠ ${1}${NC}"; }
 err()  { printf "%b\n" "${RED}ERROR:${NC} ${1}" >&2; }
 
 # ---------------------------
-# Spinner & Progress bar
+# Spinner
 # ---------------------------
 _spinner_pid=""
 start_spinner() {
   local msg=$1
-  local delay=0.08
-  local spinstr='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
   printf "%b" "${CYAN}${msg}... ${NC}"
   (
     while :; do
-      for ((i=0;i<${#spinstr};i++)); do
-        printf "%s" "${spinstr:i:1}"
-        sleep $delay
+      for c in ⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏; do
+        printf "%s" "$c"
+        sleep 0.1
         printf "\b"
       done
     done
   ) &
   _spinner_pid=$!
-  disown
 }
 stop_spinner() {
   if [[ -n "${_spinner_pid}" ]]; then
@@ -68,25 +64,31 @@ stop_spinner() {
   fi
 }
 
+# ---------------------------
+# Progress Bar
+# ---------------------------
 progress_bar() {
-  # usage: progress_bar "Message" seconds
-  local msg=$1; local total=${2:-4}
-  printf "%b\n" "${CYAN}${msg}${NC}"
-  local cols=40
-  for ((i=1;i<=total;i++)); do
-    local filled=$(( (i*cols)/total ))
-    local empty=$((cols-filled))
-    printf "\r["
-    printf "%0.s#" $(seq 1 $filled)
-    printf "%0.s " $(seq 1 $empty)
-    printf "] %3d%%" $(( i*100/total ))
-    sleep 1
+  local duration=$1
+  local width=40
+  local fill_char="#"
+  local empty_char="-"
+
+  for ((i=0; i<=duration; i++)); do
+    local progress=$((i * width / duration))
+    local bar=$(printf "%-${width}s" "#" | cut -c1-$progress)
+    printf "\r${CYAN}Progress:${NC} [${GREEN}${bar}${NC}$(printf "%$((width - progress))s" "")] %d%%" $((i * 100 / duration))
+    sleep 0.1
   done
-  printf "\n"
+  echo ""
+}
+
+finish_task() {
+  stop_spinner
+  progress_bar 40
 }
 
 # ---------------------------
-# Ensure root / SUDO
+# Root & Deps
 # ---------------------------
 SUDO=''
 ensure_root() {
@@ -94,17 +96,14 @@ ensure_root() {
     if command -v sudo >/dev/null 2>&1; then
       SUDO='sudo'
     else
-      err "This installer requires root. Install sudo or run as root."
+      err "Run as root or install sudo."
       exit 1
     fi
   fi
 }
 
-# ---------------------------
-# Ensure base dependencies
-# ---------------------------
 ensure_deps() {
-  local needed=(curl git gpg apt-get)
+  local needed=(curl git apt-get)
   local to_install=()
   for pkg in "${needed[@]}"; do
     if ! command -v "${pkg%% *}" >/dev/null 2>&1; then
@@ -112,18 +111,11 @@ ensure_deps() {
     fi
   done
   if (( ${#to_install[@]} )); then
-    info "Installing missing base dependencies: ${to_install[*]}"
-    export DEBIAN_FRONTEND=noninteractive
-    start_spinner "Updating package lists"
-    ${SUDO} apt-get update -qq >/dev/null 2>&1 || { stop_spinner; warn "apt-get update failed"; }
-    stop_spinner
-    start_spinner "Installing packages: ${to_install[*]}"
-    ${SUDO} apt-get install -y "${to_install[@]}" >/dev/null 2>&1 || { stop_spinner; err "Failed to install base packages"; exit 1; }
-    stop_spinner
-    ok "Base dependencies ready"
-  else
-    ok "All base dependencies present"
+    info "Installing missing base dependencies..."
+    ${SUDO} apt-get update -qq >/dev/null 2>&1
+    ${SUDO} apt-get install -y "${to_install[@]}" >/dev/null 2>&1
   fi
+  ok "Base dependencies ready"
 }
 
 # ---------------------------
@@ -133,125 +125,114 @@ module_google_idx() {
   cat > dev.nix <<'EOF'
 { pkgs, ... }: {
   channel = "stable-24.05";
-  packages = [
-    pkgs.unzip
-    pkgs.openssh
-    pkgs.git
-    pkgs.qemu_kvm
-    pkgs.sudo
-    pkgs.cdrkit
-    pkgs.cloud-utils
-    pkgs.qemu
-  ];
+  packages = [ pkgs.unzip pkgs.openssh pkgs.git pkgs.qemu_kvm pkgs.sudo pkgs.cdrkit pkgs.cloud-utils pkgs.qemu ];
   env = {};
   idx = {
-    extensions = [
-      "Dart-Code.flutter"
-      "Dart-Code.dart-code"
-    ];
-    workspace = {
-      onCreate = { };
-    };
-    previews = {
-      enable = false;
-    };
+    extensions = [ "Dart-Code.flutter" "Dart-Code.dart-code" ];
+    workspace = { onCreate = { }; };
+    previews.enable = false;
   };
 }
 EOF
   ok "dev.nix created at: $(pwd)/dev.nix"
+  progress_bar 30
 }
 
 module_tailscale() {
   info "Installing Tailscale"
   if ! command -v tailscale >/dev/null 2>&1; then
-    start_spinner "Downloading and installing Tailscale"
-    curl -fsSL https://tailscale.com/install.sh | ${SUDO} sh >/dev/null 2>&1 || { stop_spinner; err "Tailscale install failed"; return 1; }
-    stop_spinner
+    start_spinner "Installing Tailscale"
+    curl -fsSL https://tailscale.com/install.sh | ${SUDO} sh >/dev/null 2>&1
+    finish_task
   else
     warn "Tailscale already installed"
   fi
-  ${SUDO} systemctl enable --now tailscaled 2>/dev/null || warn "Could not enable tailscaled (non-systemd?)"
-  ok "Tailscale ready. Run '${SUDO} tailscale up' to connect"
+  ${SUDO} systemctl enable --now tailscaled >/dev/null 2>&1 || warn "Could not enable tailscaled"
+  ok "Run '${SUDO} tailscale up' to connect"
 }
 
 module_playit() {
   info "Installing Playit.gg"
   export DEBIAN_FRONTEND=noninteractive
   start_spinner "Adding Playit repository & installing"
-  ${SUDO} apt-get update -qq >/dev/null 2>&1 || true
-  ${SUDO} apt-get install -y curl gpg apt-transport-https ca-certificates >/dev/null 2>&1 || true
-  curl -fsSL https://playit-cloud.github.io/ppa/key.gpg | gpg --dearmor | ${SUDO} tee /etc/apt/trusted.gpg.d/playit.gpg >/dev/null 2>&1 || true
+  ${SUDO} apt-get update -qq >/dev/null 2>&1
+  ${SUDO} apt-get install -y curl gpg apt-transport-https ca-certificates >/dev/null 2>&1
+  curl -fsSL https://playit-cloud.github.io/ppa/key.gpg | gpg --dearmor | ${SUDO} tee /etc/apt/trusted.gpg.d/playit.gpg >/dev/null 2>&1
   echo "deb [signed-by=/etc/apt/trusted.gpg.d/playit.gpg] https://playit-cloud.github.io/ppa/data ./" | ${SUDO} tee /etc/apt/sources.list.d/playit-cloud.list >/dev/null 2>&1
-  ${SUDO} apt-get update -qq >/dev/null 2>&1 || true
-  ${SUDO} apt-get install -y playit >/dev/null 2>&1 || { stop_spinner; warn "playit package may not be available in this repo"; }
-  stop_spinner
-  ${SUDO} systemctl enable --now playit 2>/dev/null || warn "Could not enable playit service"
+  ${SUDO} apt-get update -qq >/dev/null 2>&1
+  ${SUDO} apt-get install -y playit >/dev/null 2>&1 || warn "Playit package may not be available"
+  finish_task
+  ${SUDO} systemctl enable --now playit >/dev/null 2>&1 || warn "Could not enable playit service"
   ok "Playit installed. Run '${SUDO} playit setup' to link a tunnel"
 }
 
 module_24_7() {
-  info "Installing 24-7 background script"
-  ${SUDO} apt-get update -qq >/dev/null 2>&1 || true
-  ${SUDO} apt-get install -y python3 >/dev/null 2>&1 || true
+  info "Installing 24-7 Python3 background service"
+  ${SUDO} apt-get update -qq >/dev/null 2>&1
+  ${SUDO} apt-get install -y python3 >/dev/null 2>&1
 
-  start_spinner "Writing script to /usr/local/bin/24-7.py"
+  start_spinner "Writing /usr/local/bin/24-7.py"
   ${SUDO} mkdir -p /usr/local/bin
   ${SUDO} tee /usr/local/bin/24-7.py >/dev/null <<'PYEOF'
 #!/usr/bin/env python3
-import os, random, string, time
+import os, random, string, time, logging, sys
 from pathlib import Path
-def generate_random_string(length=100):
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
-def run_random_command():
-    commands=[lambda: None, lambda: None]
-    if random.random() < 0.05:
-        try:
-            os.system('neofetch --version > /dev/null 2>&1')
-        except:
-            pass
-def create_edit_delete_file():
-    base_folder = Path("/var/tmp/24-7")
-    base_folder.mkdir(parents=True, exist_ok=True)
-    cycle_count = 0
+
+WORK_DIR = Path("/var/tmp/24-7")
+LOG_FILE = Path("/var/log/24-7.log")
+
+LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler(sys.stdout)],
+)
+
+def randstr(n=80):
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=n))
+
+def make_file():
+    WORK_DIR.mkdir(parents=True, exist_ok=True)
+    f = WORK_DIR / f"{randstr(8)}.log"
+    with f.open('w') as fp:
+        for _ in range(random.randint(5, 10)):
+            fp.write(randstr() + "\n")
+    logging.info(f"Created {f}")
+    return f
+
+def delete_file(f):
+    try:
+        f.unlink()
+        logging.info(f"Deleted {f}")
+    except Exception as e:
+        logging.warning(f"Failed to delete {f}: {e}")
+
+def main():
+    logging.info("24-7 service started.")
     while True:
-        try:
-            cycle_count += 1
-            file_ext = random.choice(['.txt', '.log', '.tmp'])
-            file_name = base_folder / (generate_random_string(8) + file_ext)
-            with open(file_name, 'w') as f:
-                for _ in range(random.randint(5, 12)):
-                    f.write(generate_random_string(random.randint(20, 120)) + '\n')
-            time.sleep(random.uniform(1, 2))
-            with open(file_name, 'w') as f:
-                for _ in range(random.randint(3, 10)):
-                    f.write(generate_random_string(random.randint(20, 120)) + '\n')
-            time.sleep(random.uniform(0.5, 1.5))
-            try:
-                os.remove(file_name)
-            except OSError:
-                pass
-            run_random_command()
-            if cycle_count % 10 == 0:
-                for old_file in base_folder.glob("*.tmp"):
-                    try:
-                        old_file.unlink()
-                    except:
-                        pass
-        except Exception:
-            time.sleep(5)
+        f = make_file()
+        time.sleep(random.uniform(1.0, 2.0))
+        delete_file(f)
+        time.sleep(random.uniform(1.0, 2.0))
+
 if __name__ == "__main__":
-    create_edit_delete_file()
+    try:
+        main()
+    except KeyboardInterrupt:
+        logging.info("24-7 stopped.")
+    except Exception as e:
+        logging.exception(e)
 PYEOF
   ${SUDO} chmod +x /usr/local/bin/24-7.py
-  stop_spinner
+  finish_task
 
-  # Create systemd service
-  local svc="[Unit]
-Description=24-7 background generator
+  start_spinner "Creating systemd service"
+  ${SUDO} tee /etc/systemd/system/24-7.service >/dev/null <<EOF
+[Unit]
+Description=24-7 Python background activity
 After=network.target
 
 [Service]
-Type=simple
 ExecStart=/usr/bin/env python3 /usr/local/bin/24-7.py
 Restart=always
 StandardOutput=append:${LOGFILE}
@@ -260,22 +241,20 @@ User=root
 
 [Install]
 WantedBy=multi-user.target
-"
-  start_spinner "Installing systemd service"
-  echo "$svc" | ${SUDO} tee /etc/systemd/system/24-7.service >/dev/null
-  ${SUDO} systemctl daemon-reload >/dev/null 2>&1 || true
-  ${SUDO} systemctl enable --now 24-7.service >/dev/null 2>&1 || warn "Could not enable 24-7.service"
-  stop_spinner
-  ok "24-7 script installed and started. Logs: ${LOGFILE}"
+EOF
+  ${SUDO} systemctl daemon-reload
+  ${SUDO} systemctl enable --now 24-7.service >/dev/null 2>&1 || warn "Could not enable service"
+  finish_task
+  ok "24-7 Python service installed and running."
 }
 
 module_rdp() {
   info "Setting up RDP (XFCE4 + xrdp)"
   export DEBIAN_FRONTEND=noninteractive
   start_spinner "Installing XFCE4 and xrdp"
-  ${SUDO} apt-get update -qq >/dev/null 2>&1 || true
-  ${SUDO} apt-get install -y xfce4 xfce4-goodies xrdp >/dev/null 2>&1 || { stop_spinner; err "Failed installing RDP packages"; return 1; }
-  stop_spinner
+  ${SUDO} apt-get update -qq >/dev/null 2>&1
+  ${SUDO} apt-get install -y xfce4 xfce4-goodies xrdp >/dev/null 2>&1
+  finish_task
 
   local user_home
   if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != "root" ]]; then
@@ -284,48 +263,42 @@ module_rdp() {
     user_home="$HOME"
   fi
 
-  printf "%s\n" "startxfce4" | ${SUDO} tee "${user_home}/.xsession" >/dev/null || true
-  ${SUDO} chmod 644 "${user_home}/.xsession" || true
-  ${SUDO} systemctl enable --now xrdp 2>/dev/null || warn "Enable/start xrdp failed"
-  ok "RDP setup complete. Connect to port 3389 with your credentials"
-  warn "Tip: Run 'ip addr show' to find this machine's IP"
+  echo "startxfce4" | ${SUDO} tee "${user_home}/.xsession" >/dev/null
+  ${SUDO} chmod 644 "${user_home}/.xsession"
+  ${SUDO} systemctl enable --now xrdp >/dev/null 2>&1
+  ok "RDP ready — connect to port 3389"
+  warn "Use 'ip addr show' to find IP"
 }
 
 module_vps_hopingboyz() {
-  info "Launching VPS Management script by @Hopingboyz (GitHub one-liner)"
-  # Raw URL to the script on GitHub
+  info "Launching VPS Management script by @Hopingboyz"
   local url="https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/VPS%20MAKER/VM%20Maker-%40Hopingboyz.sh"
-  start_spinner "Downloading & executing remote script"
-  # Pipe to bash
-  bash <(curl -fsSL "$url") || { stop_spinner; err "Remote script execution failed"; return 1; }
-  stop_spinner
+  bash <(curl -fsSL "$url") || err "Remote script failed"
   ok "VPS Manager executed"
+  progress_bar 25
 }
 
 # ---------------------------
-# Main Menu
+# Menu UI
 # ---------------------------
-print_static_header() {
+print_header() {
   clear
-  printf "%b\n" "${ORANGE}"
-  printf "%s\n" "$ASCII_HEADER"
-  printf "%b\n" "${NC}"
-  printf "%b\n" "${YELLOW}             r2ksanu toolkit${NC}"
-  printf "\n"
+  printf "%b\n" "${ORANGE}${ASCII_HEADER}${NC}"
+  printf "%b\n" "${YELLOW}             r2ksanu toolkit${NC}\n"
 }
 
 main_menu() {
   while true; do
-    print_static_header
-    printf "%b" "${CYAN}Select an action:${NC}\n\n"
-    printf "  %b1%b) %bGoogle IDX dev.nix generator%b\n" "${YELLOW}" "${NC}" "${GREEN}" "${NC}"
-    printf "  %b2%b) %bInstall Tailscale VPN%b\n" "${YELLOW}" "${NC}" "${GREEN}" "${NC}"
-    printf "  %b3%b) %bInstall Playit.gg tunnel%b\n" "${YELLOW}" "${NC}" "${GREEN}" "${NC}"
-    printf "  %b4%b) %bInstall 24-7 background script%b\n" "${YELLOW}" "${NC}" "${GREEN}" "${NC}"
-    printf "  %b5%b) %bSetup RDP (XFCE + xrdp)%b\n" "${YELLOW}" "${NC}" "${GREEN}" "${NC}"
-    printf "  %b6%b) %bVPS Management by @Hopingboyz (GitHub)%b\n" "${YELLOW}" "${NC}" "${GREEN}" "${NC}"
-    printf "  %b7%b) %bShow 24-7 logs (last 50 lines)%b\n" "${YELLOW}" "${NC}" "${GREEN}" "${NC}"
-    printf "  %b0%b) %bExit%b\n\n" "${YELLOW}" "${NC}" "${RED}" "${NC}"
+    print_header
+    echo -e "${CYAN}Select an action:${NC}\n"
+    echo -e "  ${YELLOW}1${NC}) ${GREEN}Google IDX dev.nix generator${NC}"
+    echo -e "  ${YELLOW}2${NC}) ${GREEN}Install Tailscale VPN${NC}"
+    echo -e "  ${YELLOW}3${NC}) ${GREEN}Install Playit.gg tunnel${NC}"
+    echo -e "  ${YELLOW}4${NC}) ${GREEN}Install 24-7 Python background script${NC}"
+    echo -e "  ${YELLOW}5${NC}) ${GREEN}Setup RDP (XFCE + xrdp)${NC}"
+    echo -e "  ${YELLOW}6${NC}) ${GREEN}VPS Management by @Hopingboyz${NC}"
+    echo -e "  ${YELLOW}7${NC}) ${GREEN}Show 24-7 logs (last 50 lines)${NC}"
+    echo -e "  ${YELLOW}0${NC}) ${RED}Exit${NC}\n"
     read -rp $'\e[1;33mChoice:\e[0m ' choice || choice=0
     case "$choice" in
       1) module_google_idx ;;
@@ -335,19 +308,17 @@ main_menu() {
       5) module_rdp ;;
       6) module_vps_hopingboyz ;;
       7)
-         if ${SUDO} test -f "${LOGFILE}" >/dev/null 2>&1; then
+         if ${SUDO} test -f "${LOGFILE}"; then
            ${SUDO} tail -n 50 "${LOGFILE}" || warn "Unable to read log"
          else
            warn "No log found at ${LOGFILE}"
          fi
          ;;
       0) ok "Goodbye!"; exit 0 ;;
-      *)
-         err "Invalid choice: ${choice}"
-         ;;
+      *) err "Invalid choice: ${choice}" ;;
     esac
-    printf "\n"
-    read -rp $'\e[1;36mPress Enter to continue...\e[0m' _dummy
+    echo ""
+    read -rp $'\e[1;36mPress Enter to continue...\e[0m' _
   done
 }
 
@@ -357,9 +328,7 @@ main_menu() {
 trap 'err "Interrupted."; exit 1' INT TERM
 ensure_root
 ensure_deps
-print_static_header
+print_header
 info "Dependencies checked. Loading menu..."
 sleep 0.5
 main_menu
-
-# End of script
