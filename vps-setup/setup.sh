@@ -152,14 +152,21 @@ run_nginx() {
 }
 
 run_google_idx() {
-    echo -e "\n${YELLOW}🧠 Installing Google IDX Toolkit...${NC}"
-    (
+    echo -e "\n${YELLOW}🧠 Installing Google IDX Toolkit (non-interactive)...${NC}"
+    
+    {
         set +e
-        curl -sL https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/Google-IDX/google-idx.sh \
-        | sed '/Goodbye!/d' \
-        | bash
-    ) & spinner
+        WORKDIR="$HOME/google-idx"
+        REPO_URL="https://github.com/R2Ksanu/vps-tool.git"
+        command_exists git || sudo apt install -y git
+        rm -rf "$WORKDIR"
+        git clone --depth=1 "$REPO_URL" "$WORKDIR"
+        chmod +x "$WORKDIR/vps-setup/Google-IDX/google-idx.sh"
+        bash "$WORKDIR/vps-setup/Google-IDX/google-idx.sh"
+        echo -e "${GREEN}✔ Google IDX setup completed.${NC}"
+    } & spinner
 }
+
 run_mongodb() {
     echo -e "\n${YELLOW}🍃 Installing MongoDB...${NC}"
     {
