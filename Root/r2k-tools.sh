@@ -1,5 +1,5 @@
 #!/bin/bash
-# R2K Main Menu Launcher
+
 
 function gradient_text() {
     text="$1"

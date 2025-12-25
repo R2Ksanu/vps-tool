@@ -2,9 +2,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-# ---------------------------
-# Colors & Header
-# ---------------------------
+
 ORANGE='\033[38;5;208m'
 RED='\033[38;5;196m'
 GREEN='\033[0;32m'
@@ -29,17 +27,13 @@ ASCII_HEADER='
 
 LOGFILE="/var/log/24-7.log"
 
-# ---------------------------
-# Output helpers
-# ---------------------------
+
 info() { printf "%b\n" "${CYAN}${1}${NC}"; }
 ok()   { printf "%b\n" "${GREEN}✔ ${1}${NC}"; }
 warn() { printf "%b\n" "${YELLOW}⚠ ${1}${NC}"; }
 err()  { printf "%b\n" "${RED}ERROR:${NC} ${1}" >&2; }
 
-# ---------------------------
-# Spinner
-# ---------------------------
+
 _spinner_pid=""
 start_spinner() {
   local msg=$1
@@ -64,9 +58,7 @@ stop_spinner() {
   fi
 }
 
-# ---------------------------
-# Progress Bar
-# ---------------------------
+
 progress_bar() {
   local duration=$1
   local width=40
@@ -87,9 +79,7 @@ finish_task() {
   progress_bar 40
 }
 
-# ---------------------------
-# Root & Deps
-# ---------------------------
+
 SUDO=''
 ensure_root() {
   if [[ $EUID -ne 0 ]]; then
@@ -118,9 +108,7 @@ ensure_deps() {
   ok "Base dependencies ready"
 }
 
-# ---------------------------
-# Modules
-# ---------------------------
+
 module_google_idx() {
   cat > dev.nix <<'EOF'
 { pkgs, ... }: {
@@ -278,9 +266,7 @@ module_vps_hopingboyz() {
   progress_bar 25
 }
 
-# ---------------------------
-# Menu UI
-# ---------------------------
+
 print_header() {
   clear
   printf "%b\n" "${ORANGE}${ASCII_HEADER}${NC}"
@@ -322,9 +308,6 @@ main_menu() {
   done
 }
 
-# ---------------------------
-# Startup
-# ---------------------------
 trap 'err "Interrupted."; exit 1' INT TERM
 ensure_root
 ensure_deps

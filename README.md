@@ -9,7 +9,7 @@ Designed for **speed**, **simplicity**, and **security**, this tool automates th
 
 All actions are logged to `setup_log.txt` for transparency and troubleshooting.
 ---
-Powered by R2K
+Powered by r2K
 
 ## 🌟 Features
 

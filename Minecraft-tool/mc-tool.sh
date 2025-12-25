@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# Define colors
+
 RED='\033[0;31m'
 ORANGE='\033[0;33m'
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
 YELLOW='\033[1;33m'
 BOLD='\033[1m'
-NC='\033[0m' # No Color
+NC='\033[0m' 
 
-# ASCII Art (Minecraft Style)
+
 ascii_art="
 ${ORANGE}███████╗███╗   ███╗ ██████╗      ████████╗ ██████╗  ██████╗ ██╗     
 ${GREEN}██╔════╝████╗ ████║██╔═══██╗     ╚══██╔══╝██╔═══██╗██╔════╝ ██║     
@@ -23,13 +23,12 @@ ${CYAN}              Minecraft Panel Installer Tool - by R2K
 clear
 echo -e "$ascii_art"
 
-# Check root
 if [ "$EUID" -ne 0 ]; then
   echo -e "${RED}Please run this script as root.${NC}"
   exit 1
 fi
 
-# Utility
+
 port_check() {
   if ss -tuln | grep -q ":$1"; then
     echo -e "${RED}✗ Port $1 is already in use!${NC}"
@@ -43,7 +42,7 @@ echo_message() {
   echo -e "${ORANGE}[*] $1${NC}"
 }
 
-# Draco Panel Install (UPDATED)
+
 install_draco_panel() {
   port_check 3000
   echo_message "Installing Draco Panel..."
@@ -60,7 +59,7 @@ install_draco_panel() {
   echo -e "${GREEN}✔ Draco Panel running on port 3000${NC}"
 }
 
-# Draco Node Install (UPDATED)
+
 install_draco_node() {
   echo_message "Installing Draco Node..."
   git clone https://github.com/draco-labes/draco-daemon
@@ -68,9 +67,7 @@ install_draco_node() {
   npm install
   echo_message "Paste your configuration here."
   echo -e "${GREEN}Run with: node .${NC}"
-}
 
-# Skyport Panel Install
 install_skyport_panel() {
   port_check 3001
   echo_message "Installing Skyport Panel..."
@@ -90,7 +87,6 @@ install_skyport_panel() {
   echo -e "${GREEN}✔ Skyport Panel running on port 3001${NC}"
 }
 
-# Skyport Node Install
 install_skyport_node() {
   echo_message "Installing Skyport Node..."
   git clone https://github.com/achul123/skyportd.git
@@ -100,15 +96,12 @@ install_skyport_node() {
   echo -e "${GREEN}Run with: pm2 start .${NC}"
 }
 
-# Pterodactyl Base Install
 install_pterodactyl() {
   echo_message "Installing Pterodactyl..."
   bash <(curl -s https://pterodactyl-installer.se)
 }
 
-# ==========================================================
-#   Blueprint Addon
-# ==========================================================
+
 print_header() {
     echo -e "\n${BOLD}${CYAN}=== $1 ===${NC}\n"
 }

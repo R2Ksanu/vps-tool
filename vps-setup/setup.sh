@@ -1,9 +1,9 @@
 #!/bin/bash
-# ==============================================================
-# 🌐 VPS Setup Tool — Pro Edition by R2Ksanu
-# ==============================================================
 
-# 🎨 Colors
+
+set +e
+
+
 RED='\033[1;91m'
 YELLOW='\033[1;93m'
 GREEN='\033[1;92m'
@@ -13,27 +13,26 @@ CYAN='\033[1;96m'
 WHITE='\033[1;97m'
 NC='\033[0m'
 
-# ==============================================================
-# ✨ Animation & UI Helpers
-# ==============================================================
+
 animate_text() {
     local text="$1" delay="${2:-0.03}"
     for ((i=0; i<${#text}; i++)); do
         printf "%s" "${text:$i:1}"
         sleep "$delay"
     done
-    echo ""
+    echo
 }
 
 spinner() {
     local pid=$!
     local spin='|/-\'
     local i=0
-    while kill -0 $pid 2>/dev/null; do
+    while kill -0 "$pid" 2>/dev/null; do
         printf "\r${CYAN}⏳ ${spin:$i:1}${NC}"
-        i=$(( (i+1) %4 ))
+        i=$(( (i + 1) % 4 ))
         sleep 0.1
     done
+    wait "$pid"
     printf "\r${GREEN}✔ Done!${NC}\n"
 }
 
@@ -45,17 +44,14 @@ progress_bar() {
     for ((i=0; i<=width; i++)); do
         local percent=$((i * 100 / width))
         printf "\r${MAGENTA}[${CYAN}"
-        for ((j=0; j<i; j++)); do printf "${fill}"; done
-        for ((j=i; j<width; j++)); do printf "${empty}"; done
+        for ((j=0; j<i; j++)); do printf "%s" "$fill"; done
+        for ((j=i; j<width; j++)); do printf "%s" "$empty"; done
         printf "${MAGENTA}] ${WHITE}%3d%%" "$percent"
         sleep "$(bc -l <<< "$duration/$width")"
     done
-    echo ""
+    echo
 }
 
-# ==============================================================
-# 🚀 Banner
-# ==============================================================
 show_banner() {
     clear
     echo -e "${RED}"
@@ -63,31 +59,22 @@ show_banner() {
     echo "║        🚀 VPS SETUP TOOL — Pro Edition by R2Ksanu       ║"
     echo "╚════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
-    animate_text "${CYAN}💻 Setting up your VPS environment...${NC}" 0.03
+    animate_text "${CYAN}💻 Setting up your VPS environment...${NC}"
     progress_bar 2
-    echo ""
+    echo
 }
 
-# ==============================================================
-# ⚙️ Utilities
-# ==============================================================
+
 command_exists() { command -v "$1" &>/dev/null; }
 is_package_installed() { dpkg -l | grep -q "^ii  $1 "; }
-
-# ==============================================================
-# 🧩 Core Functions
-# ==============================================================
 
 optimize_apt() {
     echo -e "\n${YELLOW}🔄 Optimizing APT and installing base packages...${NC}"
     {
         sudo apt update -y && sudo apt upgrade -y
-        local pkgs=(sudo tmate htop git curl wget unzip ufw fail2ban nginx python3 python3-pip python3-venv certbot python3-certbot-nginx)
+        pkgs=(sudo tmate htop git curl wget unzip ufw fail2ban nginx python3 python3-pip python3-venv certbot python3-certbot-nginx)
         for pkg in "${pkgs[@]}"; do
-            if ! is_package_installed "$pkg"; then
-                echo -e "${BLUE}📦 Installing: ${pkg}${NC}"
-                sudo apt install -y "$pkg"
-            fi
+            is_package_installed "$pkg" || sudo apt install -y "$pkg"
         done
         sudo apt autoremove -y && sudo apt autoclean -y && sudo apt clean -y
     } & spinner
@@ -96,24 +83,20 @@ optimize_apt() {
 run_fastfetch() {
     echo -e "\n${YELLOW}🖥 Installing Fastfetch...${NC}"
     {
-        if command_exists fastfetch; then
-            echo -e "${GREEN}✔ Already installed.${NC}"
-        else
+        command_exists fastfetch || {
             sudo add-apt-repository -y ppa:fastfetch-cli/fastfetch || true
             sudo apt update && sudo apt install -y fastfetch || sudo snap install fastfetch --classic
-        fi
+        }
     } & spinner
 }
 
 run_nodejs() {
     echo -e "\n${YELLOW}⚡ Installing Node.js v22...${NC}"
     {
-        if command_exists node && node --version | grep -q "v22"; then
-            echo -e "${GREEN}✔ Node.js v22 already installed.${NC}"
-        else
+        command_exists node && node -v | grep -q "v22" || {
             curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
             sudo apt install -y nodejs
-        fi
+        }
     } & spinner
 }
 
@@ -125,13 +108,10 @@ run_sshx() {
 run_docker() {
     echo -e "\n${YELLOW}🐳 Installing Docker...${NC}"
     {
-        if command_exists docker; then
-            echo -e "${GREEN}✔ Docker already installed.${NC}"
-        else
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh && rm get-docker.sh
+        command_exists docker || {
+            curl -fsSL https://get.docker.com | sh
             sudo usermod -aG docker "$USER"
-        fi
+        }
     } & spinner
 }
 
@@ -140,8 +120,7 @@ run_firewall_fail2ban() {
     {
         sudo apt install -y ufw fail2ban
         sudo ufw allow OpenSSH
-        sudo ufw allow 80/tcp
-        sudo ufw allow 443/tcp
+        sudo ufw allow 80,443/tcp
         sudo ufw --force enable
         sudo systemctl enable fail2ban --now
     } & spinner
@@ -164,8 +143,7 @@ run_cleanup() {
 
 run_sysinfo() {
     echo -e "\n${YELLOW}📊 System Information:${NC}"
-    sleep 1
-    command_exists fastfetch && fastfetch || neofetch || uname -a
+    command_exists fastfetch && fastfetch || uname -a
 }
 
 run_nginx() {
@@ -173,24 +151,31 @@ run_nginx() {
     { sudo apt install -y nginx && sudo systemctl enable nginx --now; } & spinner
 }
 
+# ========================= FIXED FUNCTION =========================
 run_google_idx() {
     echo -e "\n${YELLOW}🧠 Installing Google IDX Toolkit...${NC}"
-    { curl -sL https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/Google-IDX/google-idx.sh | bash; } & spinner
+    (
+        set +e
+        curl -sL https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/Google-IDX/google-idx.sh | bash
+        echo -e "${GREEN}✔ Google IDX installer finished.${NC}"
+    ) & spinner
 }
+# ==================================================================
 
 run_mongodb() {
     echo -e "\n${YELLOW}🍃 Installing MongoDB...${NC}"
     {
-        if command_exists mongod; then
-            echo -e "${GREEN}✔ MongoDB already installed.${NC}"
-        else
-            wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
+        command_exists mongod || {
+            wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc |
+            sudo gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg
+
             echo "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg] \
-            https://repo.mongodb.org/apt/ubuntu $(lsb_release -sc 2>/dev/null || echo jammy)/mongodb-org/7.0 multiverse" \
-            | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+https://repo.mongodb.org/apt/ubuntu $(lsb_release -sc)/mongodb-org/7.0 multiverse" |
+            sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+
             sudo apt update && sudo apt install -y mongodb-org
             sudo systemctl enable mongod --now
-        fi
+        }
     } & spinner
 }
 
@@ -207,6 +192,7 @@ run_python_env() {
 # ==============================================================
 # 🧭 Main Menu
 # ==============================================================
+
 show_banner
 
 while true; do
@@ -215,21 +201,21 @@ while true; do
     echo "║                VPS SETUP MENU — R2Ksanu Pro                ║"
     echo "╠════════════════════════════════════════════════════════════╣"
     echo "║  1.  Base Setup + APT Optimize                             ║"
-    echo "║  2.  Fastfetch (System Info Tool)                          ║"
-    echo "║  3.  Node.js v22 LTS                                       ║"
-    echo "║  4.  SSHX (Collaborative SSH)                              ║"
-    echo "║  5.  Docker (Containerization)                             ║"
-    echo "║  6.  Firewall + Fail2Ban (Security)                        ║"
-    echo "║  7.  PM2 (Process Manager)                                 ║"
-    echo "║  8.  Fastfetch on Login                                    ║"
-    echo "║  9.  System Cleanup                                        ║"
-    echo "║ 10.  Sysinfo (Display Info)                                ║"
-    echo "║ 11.  Nginx (Web Server)                                    ║"
-    echo "║ 12.  Google IDX Setup (One-liner)                          ║"
-    echo "║ 13.  MongoDB (Database)                                    ║"
-    echo "║ 14.  Certbot SSL (Certificates)                            ║"
-    echo "║ 15.  Python Env (Virtual Env)                              ║"
-    echo "║  0.  Exit                                                  ║"
+    echo "║  2.  Fastfetch                                            ║"
+    echo "║  3.  Node.js v22                                          ║"
+    echo "║  4.  SSHX                                                 ║"
+    echo "║  5.  Docker                                               ║"
+    echo "║  6.  Firewall + Fail2Ban                                  ║"
+    echo "║  7.  PM2                                                  ║"
+    echo "║  8.  Fastfetch on Login                                   ║"
+    echo "║  9.  System Cleanup                                       ║"
+    echo "║ 10.  Sysinfo                                              ║"
+    echo "║ 11.  Nginx                                                ║"
+    echo "║ 12.  Google IDX                                           ║"
+    echo "║ 13.  MongoDB                                              ║"
+    echo "║ 14.  Certbot SSL                                          ║"
+    echo "║ 15.  Python Env                                          ║"
+    echo "║  0.  Exit                                                 ║"
     echo "╚════════════════════════════════════════════════════════════╝"
     echo -ne "${CYAN}Enter your choice (0–15): ${NC}"
     read -r choice
@@ -250,8 +236,8 @@ while true; do
         13) run_mongodb ;;
         14) run_certbot ;;
         15) run_python_env ;;
-        0) echo -e "${GREEN}👋 Exiting VPS Setup Tool. Goodbye!${NC}"; exit 0 ;;
-        *) echo -e "${RED}❌ Invalid choice! Try again.${NC}" ;;
+        0) echo -e "${GREEN}👋 Exiting. Goodbye!${NC}"; exit 0 ;;
+        *) echo -e "${RED}❌ Invalid choice!${NC}" ;;
     esac
 
     echo -ne "\n${GREEN}🔁 Run another task? (y/n): ${NC}"
