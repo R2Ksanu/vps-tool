@@ -11,22 +11,7 @@ All actions are logged to `setup_log.txt` for transparency and troubleshooting.
 ---
 Powered by r2K
 
-## 🌟 Features
 
-- ⚡ **One-Command Deployment**: Set up your VPS effortlessly with a single script.
-- 🔒 **Root Privilege Check**: Ensures secure execution by requiring root access.
-- 📊 **Fastfetch System Info**: Displays detailed system information on demand or at login.
-- 🌐 **SSHX Remote Access**: Optional installation for collaborative remote shell access.
-- 📝 **Detailed Logging**: Saves all operations to `setup_log.txt` for easy review.
-- 🐳 **Docker Support**: Installs Docker for containerized applications.
-- 🌍 **Nginx Web Server**: Configures Nginx for hosting websites or applications.
-- 🛡️ **Security Enhancements**: Sets up `UFW` firewall and `Fail2Ban` for protection.
-- ⚙️ **PM2 Process Manager**: Manages Node.js applications with ease.
-- 🧹 **System Cleanup**: Removes unnecessary packages to optimize performance.
-- 🎮 **Minecraft Server Support**: Installs Skyport, Draco, or Pterodactyl panels for game server management.
-- 🎨 **Interactive Interface**: Features colorful menus, gradient ASCII art, and loading spinners for a polished experience.
-
----
 
 ## 🛠️ Installation
 
