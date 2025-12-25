@@ -151,17 +151,15 @@ run_nginx() {
     { sudo apt install -y nginx && sudo systemctl enable nginx --now; } & spinner
 }
 
-# ========================= FIXED FUNCTION =========================
 run_google_idx() {
     echo -e "\n${YELLOW}🧠 Installing Google IDX Toolkit...${NC}"
     (
         set +e
-        curl -sL https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/Google-IDX/google-idx.sh | bash
-        echo -e "${GREEN}✔ Google IDX installer finished.${NC}"
+        curl -sL https://raw.githubusercontent.com/R2Ksanu/vps-tool/main/vps-setup/Google-IDX/google-idx.sh \
+        | sed '/Goodbye!/d' \
+        | bash
     ) & spinner
 }
-# ==================================================================
-
 run_mongodb() {
     echo -e "\n${YELLOW}🍃 Installing MongoDB...${NC}"
     {
