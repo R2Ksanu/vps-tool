@@ -274,6 +274,7 @@ print_header() {
 }
 
 main_menu() {
+  set +e   # IMPORTANT: disable exit-on-error for interactive input
   while true; do
     print_header
     echo -e "${CYAN}Select an action:${NC}\n"
@@ -285,7 +286,11 @@ main_menu() {
     echo -e "  ${YELLOW}6${NC}) ${GREEN}VPS Management by @Hopingboyz${NC}"
     echo -e "  ${YELLOW}7${NC}) ${GREEN}Show 24-7 logs (last 50 lines)${NC}"
     echo -e "  ${YELLOW}0${NC}) ${RED}Exit${NC}\n"
-    read -rp $'\e[1;33mChoice:\e[0m ' choice || choice=0
+
+    if ! read -rp $'\e[1;33mChoice:\e[0m ' choice; then
+      choice=""
+    fi
+
     case "$choice" in
       1) module_google_idx ;;
       2) module_tailscale ;;
@@ -300,18 +305,11 @@ main_menu() {
            warn "No log found at ${LOGFILE}"
          fi
          ;;
-      0) ok "Goodbye!"; exit 0 ;;
+      0) ok "Goodbye!"; break ;;
       *) err "Invalid choice: ${choice}" ;;
     esac
+
     echo ""
     read -rp $'\e[1;36mPress Enter to continue...\e[0m' _
   done
 }
-
-trap 'err "Interrupted."; exit 1' INT TERM
-ensure_root
-ensure_deps
-print_header
-info "Dependencies checked. Loading menu..."
-sleep 0.5
-main_menu
